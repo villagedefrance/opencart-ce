@@ -6,7 +6,11 @@ class ControllerCheckoutCheckout extends Controller {
 			$this->redirect($this->url->link('checkout/cart'));
 		}
 
-		// Validate minimum quantity requirments.
+		if ($this->config->get('config_secure') && !$this->request->isSecure()) {
+			$this->redirect($this->url->link('checkout/checkout', '', 'SSL'));
+		}
+
+		// Validate minimum quantity requirements.
 		$products = $this->cart->getProducts();
 
 		foreach ($products as $product) {

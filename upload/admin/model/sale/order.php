@@ -115,13 +115,55 @@ class ModelSaleOrder extends Model {
 
 		// Get the total
 		$total = 0;
+		$coupon_value = 0;
+		$voucher_value = 0;
 
 		if (isset($data['order_total'])) {
 			foreach ($data['order_total'] as $order_total) {
 				$this->db->query("INSERT INTO " . DB_PREFIX . "order_total SET order_id = '" . (int)$order_id . "', code = '" . $this->db->escape($order_total['code']) . "', title = '" . $this->db->escape($order_total['title']) . "', text = '" . $this->db->escape($order_total['text']) . "', `value` = '" . (float)$order_total['value'] . "', sort_order = '" . (int)$order_total['sort_order'] . "'");
+
+				if ($order_total['code'] == 'coupon') {
+					$coupon_value = $order_total['value'];
+				} elseif ($order_total['code'] == 'voucher') {
+					$voucher_value = $order_total['value'];
+				} elseif ($order_total['code'] == 'credit') {
+					$credit = $order_total['value'];
+				}
 			}
 
 			$total += $order_total['value'];
+		}
+
+		// Coupon
+		if (!empty($data['coupon'])) {
+			$this->load->model('sale/coupon');
+
+			$coupon_info = $this->model_sale_coupon->getCouponByCode($data['coupon']);
+
+			if ($coupon_info) {
+				$this->db->query("INSERT INTO `" . DB_PREFIX . "coupon_history` SET coupon_id = '" . (int)$coupon_info['coupon_id'] . "', order_id = '" . (int)$order_id . "', customer_id = '" . (int)$data['customer_id'] . "', amount = '" . (float)$coupon_value . "', date_added = NOW()");
+			}
+		}
+
+		// Voucher
+		if (!empty($data['voucher'])) {
+			$this->load->model('sale/voucher');
+
+			$voucher_info = $this->model_sale_voucher->getVoucherByCode($data['voucher']);
+
+			if ($voucher_info) {
+				$this->db->query("INSERT INTO `" . DB_PREFIX . "voucher_history` SET voucher_id = '" . (int)$voucher_info['voucher_id'] . "', order_id = '" . (int)$order_id . "', amount = '" . (float)$voucher_value . "', date_added = NOW()");
+			}
+		}
+
+		// Reward
+		if (!empty($data['reward'])) {
+			$this->db->query("INSERT INTO " . DB_PREFIX . "customer_reward SET customer_id = '" . (int)$data['customer_id'] . "', description = '" . $this->db->escape($this->language->get('text_order_id') . ' #' . $order_id) . "', points = '" . (float)-$data['reward'] . "', date_added = NOW()");
+		}
+
+		// Credit
+		if (!empty($credit)) {
+			$this->db->query("INSERT INTO " . DB_PREFIX . "customer_transaction SET customer_id = '" . (int)$data['customer_id'] . "', order_id = '" . (int)$order_id . "', description = '" . $this->db->escape($this->language->get('text_order_id') . ' #' . $order_id) . "', amount = '" . (float)$credit . "', date_added = NOW()");
 		}
 
 		// Affiliate
@@ -244,15 +286,65 @@ class ModelSaleOrder extends Model {
 
 		// Get the total
 		$total = 0;
+		$coupon_value = 0;
+		$voucher_value = 0;
 
 		$this->db->query("DELETE FROM " . DB_PREFIX . "order_total WHERE order_id = '" . (int)$order_id . "'");
 
 		if (isset($data['order_total'])) {
 			foreach ($data['order_total'] as $order_total) {
 				$this->db->query("INSERT INTO " . DB_PREFIX . "order_total SET order_total_id = '" . (int)$order_total['order_total_id'] . "', order_id = '" . (int)$order_id . "', code = '" . $this->db->escape($order_total['code']) . "', title = '" . $this->db->escape($order_total['title']) . "', text = '" . $this->db->escape($order_total['text']) . "', `value` = '" . (float)$order_total['value'] . "', sort_order = '" . (int)$order_total['sort_order'] . "'");
+
+				if ($order_total['code'] == 'coupon') {
+					$coupon_value = $order_total['value'];
+				} elseif ($order_total['code'] == 'voucher') {
+					$voucher_value = $order_total['value'];
+				} elseif ($order_total['code'] == 'credit') {
+					$credit = $order_total['value'];
+				}
 			}
 
 			$total += $order_total['value'];
+		}
+
+		// Coupon
+		$this->db->query("DELETE FROM " . DB_PREFIX . "coupon_history WHERE order_id = '" . (int)$order_id . "'");
+
+		if (!empty($data['coupon'])) {
+			$this->load->model('sale/coupon');
+
+			$coupon_info = $this->model_sale_coupon->getCouponByCode($data['coupon']);
+
+			if ($coupon_info) {
+				$this->db->query("INSERT INTO `" . DB_PREFIX . "coupon_history` SET coupon_id = '" . (int)$coupon_info['coupon_id'] . "', order_id = '" . (int)$order_id . "', customer_id = '" . (int)$data['customer_id'] . "', amount = '" . (float)$coupon_value . "', date_added = NOW()");
+			}
+		}
+
+		// Voucher
+		$this->db->query("DELETE FROM " . DB_PREFIX . "voucher_history WHERE order_id = '" . (int)$order_id . "'");
+
+		if (!empty($data['voucher'])) {
+			$this->load->model('sale/voucher');
+
+			$voucher_info = $this->model_sale_voucher->getVoucherByCode($data['voucher']);
+
+			if ($voucher_info) {
+				$this->db->query("INSERT INTO `" . DB_PREFIX . "voucher_history` SET voucher_id = '" . (int)$voucher_info['voucher_id'] . "', order_id = '" . (int)$order_id . "', amount = '" . (float)$voucher_value . "', date_added = NOW()");
+			}
+		}
+
+		// Reward
+		$points = !empty($data['current_reward']) ? $data['current_reward'] : 0;
+		$points -= !empty($data['reward']) ? $data['reward'] : 0;
+		if ($points) {
+			$this->db->query("INSERT INTO " . DB_PREFIX . "customer_reward SET customer_id = '" . (int)$data['customer_id'] . "', description = '" . $this->db->escape($this->language->get('text_order_id') . ' #' . $order_id) . "', points = '" . (float)$points . "', date_added = NOW()");
+		}
+
+		// Credit
+		$this->db->query("DELETE FROM " . DB_PREFIX . "customer_transaction WHERE order_id = '" . (int)$order_id . "'");
+
+		if (!empty($credit)) {
+			$this->db->query("INSERT INTO " . DB_PREFIX . "customer_transaction SET customer_id = '" . (int)$data['customer_id'] . "', order_id = '" . (int)$order_id . "', description = '" . $this->db->escape($this->language->get('text_order_id') . ' #' . $order_id) . "', amount = '" . (float)$credit . "', date_added = NOW()");
 		}
 
 		// Affiliate
@@ -271,6 +363,8 @@ class ModelSaleOrder extends Model {
 		}
 
 		$this->db->query("UPDATE `" . DB_PREFIX . "order` SET total = '" . (float)$total . "', affiliate_id = '" . (int)$affiliate_id . "', commission = '" . (float)$commission . "' WHERE order_id = '" . (int)$order_id . "'");
+
+		$this->cache->delete('product.bestseller');
 	}
 
 	public function deleteOrder($order_id) {
@@ -301,6 +395,8 @@ class ModelSaleOrder extends Model {
 		$this->db->query("DELETE FROM " . DB_PREFIX . "customer_transaction WHERE order_id = '" . (int)$order_id . "'");
 		$this->db->query("DELETE FROM " . DB_PREFIX . "customer_reward WHERE order_id = '" . (int)$order_id . "'");
 		$this->db->query("DELETE FROM " . DB_PREFIX . "affiliate_transaction WHERE order_id = '" . (int)$order_id . "'");
+
+		$this->cache->delete('product.bestseller');
 	}
 
 	public function getOrder($order_id) {
@@ -695,7 +791,7 @@ class ModelSaleOrder extends Model {
 
 			if ($order_info['customer_id']) {
 				$message .= $language->get('text_link') . "\n";
-				$message .= html_entity_decode($order_info['store_url'] . 'index.php?route=account/order/info&order_id=' . $order_id, ENT_QUOTES, 'UTF-8') . "\n\n";
+				$message .= html_entity_decode(($this->config->get('config_secure') ? str_replace('http://', 'https://', $order_info['store_url']) : $order_info['store_url']) . 'index.php?route=account/order/info&order_id=' . $order_id, ENT_QUOTES, 'UTF-8') . "\n\n";
 			}
 
 			if ($data['comment']) {
@@ -752,10 +848,10 @@ class ModelSaleOrder extends Model {
 		$implode = array();
 
 		foreach ($products as $product_id) {
-			$implode[] = "op.product_id = '" . $product_id . "'";
+			$implode[] = "op.product_id = '" . (int)$product_id . "'";
 		}
 
-		$query = $this->db->query("SELECT DISTINCT email FROM `" . DB_PREFIX . "order` o LEFT JOIN " . DB_PREFIX . "order_product op ON (o.order_id = op.order_id) WHERE (" . implode(" OR ", $implode) . ") AND o.order_status_id <> '0' LIMIT " . $start . "," . $end);
+		$query = $this->db->query("SELECT DISTINCT email FROM `" . DB_PREFIX . "order` o LEFT JOIN " . DB_PREFIX . "order_product op ON (o.order_id = op.order_id) WHERE (" . implode(" OR ", $implode) . ") AND o.order_status_id <> '0' LIMIT " . (int)$start . "," . (int)$end);
 
 		return $query->rows;
 	}
@@ -764,10 +860,10 @@ class ModelSaleOrder extends Model {
 		$implode = array();
 
 		foreach ($products as $product_id) {
-			$implode[] = "op.product_id = '" . $product_id . "'";
+			$implode[] = "op.product_id = '" . (int)$product_id . "'";
 		}
 
-		$query = $this->db->query("SELECT DISTINCT email FROM `" . DB_PREFIX . "order` o LEFT JOIN " . DB_PREFIX . "order_product op ON (o.order_id = op.order_id) WHERE (" . implode(" OR ", $implode) . ") AND o.order_status_id <> '0'");
+		$query = $this->db->query("SELECT COUNT(DISTINCT email) AS total FROM `" . DB_PREFIX . "order` o LEFT JOIN " . DB_PREFIX . "order_product op ON (o.order_id = op.order_id) WHERE (" . implode(" OR ", $implode) . ") AND o.order_status_id <> '0'");
 
 		return $query->row['total'];
 	}

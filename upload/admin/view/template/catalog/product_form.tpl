@@ -712,9 +712,6 @@ CKEDITOR.replace('description<?php echo $language['language_id']; ?>', {
 	filebrowserBrowseUrl: 'index.php?route=common/filemanager&token=<?php echo $token; ?>',
 	filebrowserImageBrowseUrl: 'index.php?route=common/filemanager&token=<?php echo $token; ?>',
 	filebrowserFlashBrowseUrl: 'index.php?route=common/filemanager&token=<?php echo $token; ?>',
-	filebrowserUploadUrl: 'index.php?route=common/filemanager&token=<?php echo $token; ?>',
-	filebrowserImageUploadUrl: 'index.php?route=common/filemanager&token=<?php echo $token; ?>',
-	filebrowserFlashUploadUrl: 'index.php?route=common/filemanager&token=<?php echo $token; ?>'
 });
 <?php } ?>
 //--></script>
@@ -1171,7 +1168,7 @@ function addDiscount() {
 	html += '  <tr>';
 	html += '    <td class="left"><select name="product_discount[' + discount_row + '][customer_group_id]">';
 	<?php foreach ($customer_groups as $customer_group) { ?>
-	html += '      <option value="<?php echo $customer_group['customer_group_id']; ?>"><?php echo $customer_group['name']; ?></option>';
+	html += '      <option value="<?php echo $customer_group['customer_group_id']; ?>"><?php echo addslashes($customer_group['name']); ?></option>';
 	<?php } ?>
 	html += '    </select></td>';
 	html += '    <td class="right"><input type="text" name="product_discount[' + discount_row + '][quantity]" value="" size="2" /></td>';
@@ -1198,7 +1195,7 @@ function addSpecial() {
 	html += '  <tr>';
 	html += '    <td class="left"><select name="product_special[' + special_row + '][customer_group_id]">';
 	<?php foreach ($customer_groups as $customer_group) { ?>
-	html += '      <option value="<?php echo $customer_group['customer_group_id']; ?>"><?php echo $customer_group['name']; ?></option>';
+	html += '      <option value="<?php echo $customer_group['customer_group_id']; ?>"><?php echo addslashes($customer_group['name']); ?></option>';
 	<?php } ?>
 	html += '    </select></td>';
 	html += '    <td class="right"><input type="text" name="product_special[' + special_row + '][priority]" value="" size="2" /></td>';

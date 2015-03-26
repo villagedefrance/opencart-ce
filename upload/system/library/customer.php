@@ -45,13 +45,32 @@ class Customer {
 
 	public function login($email, $password, $override = false) {
 		if ($override) {
-			$customer_query = $this->db->query("SELECT * FROM " . DB_PREFIX . "customer where LOWER(email) = '" . $this->db->escape(utf8_strtolower($email)) . "' AND status = '1'");
+			$customer_query = $this->db->query("SELECT * FROM " . DB_PREFIX . "customer WHERE LOWER(email) = '" . $this->db->escape(utf8_strtolower($email)) . "' AND status = '1'");
 		} else {
 			$customer_query = $this->db->query("SELECT * FROM " . DB_PREFIX . "customer WHERE LOWER(email) = '" . $this->db->escape(utf8_strtolower($email)) . "' AND (password = SHA1(CONCAT(salt, SHA1(CONCAT(salt, SHA1('" . $this->db->escape($password) . "'))))) OR password = '" . $this->db->escape(md5($password)) . "') AND status = '1' AND approved = '1'");
 		}
 
 		if ($customer_query->num_rows) {
+			// Create customer login cookie if HTTPS
+			if ($this->config->get('config_secure')) {
+				if ($this->request->isSecure()) {
+					// Create a cookie and restrict it to HTTPS pages
+					$this->session->data['customer_cookie'] = hash_rand('md5');
+
+					setcookie('customer', $this->session->data['customer_cookie'], 0, '/', '', true, true);
+				} else {
+					return false;
+				}
+			}
+
+			// Regenerate session id
+			$this->session->regenerateId();
+
+			// Token used to protect account functions against CSRF
+			$this->setToken();
+
 			$this->session->data['customer_id'] = $customer_query->row['customer_id'];
+			$this->session->data['customer_login_time'] = time();
 
 			if ($customer_query->row['cart'] && is_string($customer_query->row['cart'])) {
 				$cart = unserialize($customer_query->row['cart']);
@@ -100,7 +119,13 @@ class Customer {
 	public function logout() {
 		$this->db->query("UPDATE " . DB_PREFIX . "customer SET cart = '" . $this->db->escape(isset($this->session->data['cart']) ? serialize($this->session->data['cart']) : '') . "', wishlist = '" . $this->db->escape(isset($this->session->data['wishlist']) ? serialize($this->session->data['wishlist']) : '') . "' WHERE customer_id = '" . (int)$this->customer_id . "'");
 
+		$this->session->data['cart'] = array();
+
 		unset($this->session->data['customer_id']);
+		unset($this->session->data['customer_cookie']);
+		unset($this->session->data['customer_token']);
+		unset($this->session->data['customer_login_time']);
+		unset($this->session->data['wishlist']);
 
 		$this->customer_id = '';
 		$this->firstname = '';
@@ -163,6 +188,26 @@ class Customer {
 		$query = $this->db->query("SELECT SUM(points) AS total FROM " . DB_PREFIX . "customer_reward WHERE customer_id = '" . (int)$this->customer_id . "'");
 
 		return $query->row['total'];
+	}
+
+	public function isSecure() {
+		if (!$this->config->get('config_secure') || ($this->request->isSecure() && isset($this->request->cookie['customer']) && isset($this->session->data['customer_cookie']) && $this->request->cookie['customer'] == $this->session->data['customer_cookie'])) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	public function setToken() {
+		$this->session->data['customer_token'] = hash_rand('md5');
+	}
+
+	public function loginExpired($age = 900) {
+		if (isset($this->session->data['customer_login_time']) && (time() - $this->session->data['customer_login_time'] < $age)) {
+			return false;
+		} else {
+			return true;
+		}
 	}
 }
 ?>

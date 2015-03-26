@@ -9,7 +9,7 @@ class ControllerPaymentWorldPay extends Controller {
 
 		if (!$this->config->get('worldpay_test')){
 			$this->data['action'] = 'https://secure.worldpay.com/wcc/purchase';
-		}else{
+		} else {
 			$this->data['action'] = 'https://secure-test.worldpay.com/wcc/purchase';
 		}
 
@@ -46,10 +46,10 @@ class ControllerPaymentWorldPay extends Controller {
 
 		$this->data['title'] = sprintf($this->language->get('heading_title'), $this->config->get('config_name'));
 
-		if (!isset($this->request->server['HTTPS']) || ($this->request->server['HTTPS'] != 'on')) {
-			$this->data['base'] = $this->config->get('config_url');
-		} else {
+		if (isset($this->request->server['HTTPS']) && (($this->request->server['HTTPS'] == 'on') || ($this->request->server['HTTPS'] == '1'))) {
 			$this->data['base'] = $this->config->get('config_ssl');
+		} else {
+			$this->data['base'] = $this->config->get('config_url');
 		}
 
 		$this->data['language'] = $this->language->get('code');
@@ -66,7 +66,7 @@ class ControllerPaymentWorldPay extends Controller {
 		if (isset($this->request->post['transStatus']) && $this->request->post['transStatus'] == 'Y') {
 			$this->load->model('checkout/order');
 
-			// If returned successful but callbackPW doesn't match, set order to pendind and record reason
+			// If returned successful but callbackPW doesn't match, set order to pending and record reason
 			if (isset($this->request->post['callbackPW']) && ($this->request->post['callbackPW'] == $this->config->get('worldpay_password'))) {
 				$this->model_checkout_order->confirm($this->request->post['cartId'], $this->config->get('worldpay_order_status_id'));
 			} else {

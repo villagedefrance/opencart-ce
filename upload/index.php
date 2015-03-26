@@ -1,6 +1,6 @@
 <?php
 // Version
-define('VERSION', '1.5.5.1');
+define('VERSION', '1.5.5.1-ce.rc2');
 
 // Configuration
 if (file_exists('config.php')) {
@@ -119,6 +119,7 @@ $registry->set('request', $request);
 // Response
 $response = new Response();
 $response->addHeader('Content-Type: text/html; charset=utf-8');
+$response->addHeader('X-Frame-Options: SAMEORIGIN');
 $response->setCompression($config->get('config_compression'));
 $registry->set('response', $response);
 
@@ -217,11 +218,11 @@ $registry->set('encryption', new Encryption($config->get('config_encryption')));
 // Front Controller
 $controller = new Front($registry);
 
+// SEO URLs
+$controller->addPreAction(new Action('common/seo_url'));
+
 // Maintenance Mode
 $controller->addPreAction(new Action('common/maintenance'));
-
-// SEO URL's
-$controller->addPreAction(new Action('common/seo_url'));
 
 // Router
 if (isset($request->get['route'])) {

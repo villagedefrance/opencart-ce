@@ -1,7 +1,7 @@
 <?php
 class ModelSaleCustomer extends Model {
 	public function addCustomer($data) {
-		$this->db->query("INSERT INTO " . DB_PREFIX . "customer SET firstname = '" . $this->db->escape($data['firstname']) . "', lastname = '" . $this->db->escape($data['lastname']) . "', email = '" . $this->db->escape($data['email']) . "', telephone = '" . $this->db->escape($data['telephone']) . "', fax = '" . $this->db->escape($data['fax']) . "', newsletter = '" . (int)$data['newsletter'] . "', customer_group_id = '" . (int)$data['customer_group_id'] . "', salt = '" . $this->db->escape($salt = substr(md5(uniqid(rand(), true)), 0, 9)) . "', password = '" . $this->db->escape(sha1($salt . sha1($salt . sha1($data['password'])))) . "', status = '" . (int)$data['status'] . "', date_added = NOW()");
+		$this->db->query("INSERT INTO " . DB_PREFIX . "customer SET firstname = '" . $this->db->escape($data['firstname']) . "', lastname = '" . $this->db->escape($data['lastname']) . "', email = '" . $this->db->escape($data['email']) . "', telephone = '" . $this->db->escape($data['telephone']) . "', fax = '" . $this->db->escape($data['fax']) . "', newsletter = '" . (int)$data['newsletter'] . "', customer_group_id = '" . (int)$data['customer_group_id'] . "', salt = '" . $this->db->escape($salt = substr(hash_rand('md5'), 0, 9)) . "', password = '" . $this->db->escape(sha1($salt . sha1($salt . sha1($data['password'])))) . "', status = '" . (int)$data['status'] . "', date_added = NOW()");
 
 		$customer_id = $this->db->getLastId();
 
@@ -12,7 +12,7 @@ class ModelSaleCustomer extends Model {
 				if (isset($address['default'])) {
 					$address_id = $this->db->getLastId();
 
-					$this->db->query("UPDATE " . DB_PREFIX . "customer SET address_id = '" . $address_id . "' WHERE customer_id = '" . (int)$customer_id . "'");
+					$this->db->query("UPDATE " . DB_PREFIX . "customer SET address_id = '" . (int)$address_id . "' WHERE customer_id = '" . (int)$customer_id . "'");
 				}
 			}
 		}
@@ -22,7 +22,7 @@ class ModelSaleCustomer extends Model {
 		$this->db->query("UPDATE " . DB_PREFIX . "customer SET firstname = '" . $this->db->escape($data['firstname']) . "', lastname = '" . $this->db->escape($data['lastname']) . "', email = '" . $this->db->escape($data['email']) . "', telephone = '" . $this->db->escape($data['telephone']) . "', fax = '" . $this->db->escape($data['fax']) . "', newsletter = '" . (int)$data['newsletter'] . "', customer_group_id = '" . (int)$data['customer_group_id'] . "', status = '" . (int)$data['status'] . "' WHERE customer_id = '" . (int)$customer_id . "'");
 
 		if ($data['password']) {
-			$this->db->query("UPDATE " . DB_PREFIX . "customer SET salt = '" . $this->db->escape($salt = substr(md5(uniqid(rand(), true)), 0, 9)) . "', password = '" . $this->db->escape(sha1($salt . sha1($salt . sha1($data['password'])))) . "' WHERE customer_id = '" . (int)$customer_id . "'");
+			$this->db->query("UPDATE " . DB_PREFIX . "customer SET salt = '" . $this->db->escape($salt = substr(hash_rand('md5'), 0, 9)) . "', password = '" . $this->db->escape(sha1($salt . sha1($salt . sha1($data['password'])))) . "' WHERE customer_id = '" . (int)$customer_id . "'");
 		}
 
 		$this->db->query("DELETE FROM " . DB_PREFIX . "address WHERE customer_id = '" . (int)$customer_id . "'");
@@ -158,10 +158,10 @@ class ModelSaleCustomer extends Model {
 
 			if ($store_info) {
 				$store_name = $store_info['name'];
-				$store_url = $store_info['url'] . 'index.php?route=account/login';
+				$store_url = ($this->config->get('config_secure') ? $store_info['ssl'] : $store_info['url']) . 'index.php?route=account/login';
 			} else {
 				$store_name = $this->config->get('config_name');
-				$store_url = HTTP_CATALOG . 'index.php?route=account/login';
+				$store_url = ($this->config->get('config_secure') ? HTTPS_CATALOG : HTTP_CATALOG) . 'index.php?route=account/login';
 			}
 
 			$message  = sprintf($this->language->get('text_approve_welcome'), $store_name) . "\n\n";
@@ -456,8 +456,26 @@ class ModelSaleCustomer extends Model {
 				$store_name = $this->config->get('config_name');
 			}
 
-			$message  = sprintf($this->language->get('text_reward_received'), $points) . "\n\n";
-			$message .= sprintf($this->language->get('text_reward_total'), $this->getRewardTotal($customer_id));
+			$subject = sprintf($this->language->get('text_reward_subject'), $store_name);
+			$reward_received = sprintf($this->language->get('text_reward_received'), $points) . "\n\n";
+			$reward_total = sprintf($this->language->get('text_reward_total'), $this->getRewardTotal($customer_id));
+
+			// Contact Email Language
+			if ($order_id) {
+				$language_query = $this->db->query("SELECT o.language_id, l.code, l.directory FROM `" . DB_PREFIX . "order` o LEFT JOIN `" . DB_PREFIX . "language` l ON (o.language_id = l.language_id) WHERE o.order_id = '" . (int)$order_id . "' AND l.status = '1'");
+
+				if ($language_query->num_rows && $language_query->row['code'] != $this->config->get('config_admin_language')) {
+					$language = new Language($language_query->row['directory']);
+					$language->load('mail/customer');
+
+					$subject = sprintf($language->get('text_reward_subject'), $store_name);
+					$reward_received = sprintf($language->get('text_reward_received'), $points) . "\n\n";
+					$reward_total = sprintf($language->get('text_reward_total'), $this->getRewardTotal($customer_id));
+				}
+			}
+
+			$message  = $reward_received;
+			$message .= $reward_total;
 
 			$mail = new Mail();
 			$mail->protocol = $this->config->get('config_mail_protocol');
@@ -470,7 +488,7 @@ class ModelSaleCustomer extends Model {
 			$mail->setTo($customer_info['email']);
 			$mail->setFrom($this->config->get('config_email'));
 			$mail->setSender($store_name);
-			$mail->setSubject(html_entity_decode(sprintf($this->language->get('text_reward_subject'), $store_name), ENT_QUOTES, 'UTF-8'));
+			$mail->setSubject(html_entity_decode($subject, ENT_QUOTES, 'UTF-8'));
 			$mail->setText(html_entity_decode($message, ENT_QUOTES, 'UTF-8'));
 			$mail->send();
 		}

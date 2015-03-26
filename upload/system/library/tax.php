@@ -88,11 +88,13 @@ final class Tax {
 		}
 	}
 
-    public function getRates($value, $tax_class_id) {
+	public function getRates($value, $tax_class_id) {
 		$tax_rates = array();
 
 		if ($this->customer->isLogged()) {
 			$customer_group_id = $this->customer->getCustomerGroupId();
+		} elseif (isset($this->session->data['guest']['customer_group_id'])) {
+			$customer_group_id = $this->session->data['guest']['customer_group_id'];
 		} else {
 			$customer_group_id = $this->config->get('config_customer_group_id');
 		}

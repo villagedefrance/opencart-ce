@@ -19,7 +19,8 @@ class Currency {
 				'symbol_left'   => $result['symbol_left'],
 				'symbol_right'  => $result['symbol_right'],
 				'decimal_place' => $result['decimal_place'],
-				'value'         => $result['value']
+				'value'         => $result['value'],
+				'status'        => $result['status']
 			);
 		}
 
@@ -35,6 +36,10 @@ class Currency {
 	}
 
 	public function set($currency) {
+		if (empty($this->currencies[$currency]['status'])) {
+			$currency = $this->config->get('config_currency');
+		}
+
 		$this->code = $currency;
 
 		if (!isset($this->session->data['currency']) || ($this->session->data['currency'] != $currency)) {
@@ -102,13 +107,13 @@ class Currency {
 		if (isset($this->currencies[$from])) {
 			$from = $this->currencies[$from]['value'];
 		} else {
-			$from = 0;
+			$from = 1;
 		}
 
 		if (isset($this->currencies[$to])) {
 			$to = $this->currencies[$to]['value'];
 		} else {
-			$to = 0;
+			$to = 1;
 		}
 
 		return $value * ($to / $from);
@@ -170,6 +175,15 @@ class Currency {
 
 	public function has($currency) {
 		return isset($this->currencies[$currency]);
+	}
+
+	public function override($currency, $value) {
+		if ($this->has($currency)) {
+			$this->currencies[$currency]['value'] = $value;
+			$this->currencies[$currency]['status'] = 1;
+
+			$this->set($currency);
+		}
 	}
 }
 ?>

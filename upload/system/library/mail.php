@@ -90,8 +90,8 @@ class Mail {
 		}
 
 		$header .= 'Date: ' . date('D, d M Y H:i:s O') . $this->newline;
-		$header .= 'From: ' . '=?UTF-8?B?' . base64_encode($this->sender) . '?=' . '<' . $this->from . '>' . $this->newline;
-		$header .= 'Reply-To: ' . '=?UTF-8?B?' . base64_encode($this->sender) . '?=' . '<' . $this->from . '>' . $this->newline;
+		$header .= 'From: ' . '=?UTF-8?B?' . base64_encode($this->sender) . '?=' . ' <' . $this->from . '>' . $this->newline;
+		$header .= 'Reply-To: ' . '=?UTF-8?B?' . base64_encode($this->sender) . '?=' . ' <' . $this->from . '>' . $this->newline;
 		$header .= 'Return-Path: ' . $this->from . $this->newline;
 		$header .= 'X-Mailer: PHP/' . phpversion() . $this->newline;
 		$header .= 'Content-Type: multipart/related; boundary="' . $boundary . '"' . $this->newline . $this->newline;
@@ -169,6 +169,8 @@ class Mail {
 				if (substr($this->hostname, 0, 3) == 'tls') {
 					fputs($handle, 'STARTTLS' . $this->crlf);
 
+					$reply = '';
+
 					while ($line = fgets($handle, 515)) {
 						$reply .= $line;
 
@@ -183,7 +185,7 @@ class Mail {
 					}
 				}
 
-				if (!empty($this->username)  && !empty($this->password)) {
+				if (!empty($this->username) && !empty($this->password)) {
 					fputs($handle, 'EHLO ' . getenv('SERVER_NAME') . $this->crlf);
 
 					$reply = '';

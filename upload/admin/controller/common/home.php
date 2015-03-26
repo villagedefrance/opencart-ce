@@ -52,7 +52,7 @@ class ControllerCommonHome extends Controller {
 		fclose($handle);
 
 		if (!file_exists($file)) {
-			$this->data['error_image'] = sprintf($this->language->get('error_image'). DIR_IMAGE);
+			$this->data['error_image'] = sprintf($this->language->get('error_image'), DIR_IMAGE);
 		} else {
 			$this->data['error_image'] = '';
 
@@ -69,7 +69,7 @@ class ControllerCommonHome extends Controller {
 		fclose($handle);
 
 		if (!file_exists($file)) {
-			$this->data['error_image_cache'] = sprintf($this->language->get('error_image_cache'). DIR_IMAGE . 'cache/');
+			$this->data['error_image_cache'] = sprintf($this->language->get('error_image_cache'), DIR_IMAGE . 'cache/');
 		} else {
 			$this->data['error_image_cache'] = '';
 
@@ -86,7 +86,7 @@ class ControllerCommonHome extends Controller {
 		fclose($handle);
 
 		if (!file_exists($file)) {
-			$this->data['error_cache'] = sprintf($this->language->get('error_image_cache'). DIR_CACHE);
+			$this->data['error_cache'] = sprintf($this->language->get('error_cache'), DIR_CACHE);
 		} else {
 			$this->data['error_cache'] = '';
 
@@ -103,7 +103,7 @@ class ControllerCommonHome extends Controller {
 		fclose($handle);
 
 		if (!file_exists($file)) {
-			$this->data['error_download'] = sprintf($this->language->get('error_download'). DIR_DOWNLOAD);
+			$this->data['error_download'] = sprintf($this->language->get('error_download'), DIR_DOWNLOAD);
 		} else {
 			$this->data['error_download'] = '';
 
@@ -120,7 +120,7 @@ class ControllerCommonHome extends Controller {
 		fclose($handle);
 
 		if (!file_exists($file)) {
-			$this->data['error_logs'] = sprintf($this->language->get('error_logs'). DIR_LOGS);
+			$this->data['error_logs'] = sprintf($this->language->get('error_logs'), DIR_LOGS);
 		} else {
 			$this->data['error_logs'] = '';
 
@@ -223,7 +223,7 @@ class ControllerCommonHome extends Controller {
 		switch ($range) {
 			case 'day':
 				for ($i = 0; $i < 24; $i++) {
-					$query = $this->db->query("SELECT COUNT(*) AS total FROM `" . DB_PREFIX . "order` WHERE order_status_id > '" . (int)$this->config->get('config_complete_status_id') . "' AND (DATE(date_added) = DATE(NOW()) AND HOUR(date_added) = '" . (int)$i . "') GROUP BY HOUR(date_added) ORDER BY date_added ASC");
+					$query = $this->db->query("SELECT COUNT(*) AS total FROM `" . DB_PREFIX . "order` WHERE order_status_id = '" . (int)$this->config->get('config_complete_status_id') . "' AND (DATE(date_added) = DATE(NOW()) AND HOUR(date_added) = '" . (int)$i . "') GROUP BY HOUR(date_added) ORDER BY date_added ASC");
 
 					if ($query->num_rows) {
 						$data['order']['data'][]  = array($i, (int)$query->row['total']);
@@ -248,7 +248,7 @@ class ControllerCommonHome extends Controller {
 				for ($i = 0; $i < 7; $i++) {
 					$date = date('Y-m-d', $date_start + ($i * 86400));
 
-					$query = $this->db->query("SELECT COUNT(*) AS total FROM `" . DB_PREFIX . "order` WHERE order_status_id > '" . (int)$this->config->get('config_complete_status_id') . "' AND DATE(date_added) = '" . $this->db->escape($date) . "' GROUP BY DATE(date_added)");
+					$query = $this->db->query("SELECT COUNT(*) AS total FROM `" . DB_PREFIX . "order` WHERE order_status_id = '" . (int)$this->config->get('config_complete_status_id') . "' AND DATE(date_added) = '" . $this->db->escape($date) . "' GROUP BY DATE(date_added)");
 
 					if ($query->num_rows) {
 						$data['order']['data'][] = array($i, (int)$query->row['total']);
@@ -273,7 +273,7 @@ class ControllerCommonHome extends Controller {
 				for ($i = 1; $i <= date('t'); $i++) {
 					$date = date('Y') . '-' . date('m') . '-' . $i;
 
-					$query = $this->db->query("SELECT COUNT(*) AS total FROM `" . DB_PREFIX . "order` WHERE order_status_id > '" . (int)$this->config->get('config_complete_status_id') . "' AND (DATE(date_added) = '" . $this->db->escape($date) . "') GROUP BY DAY(date_added)");
+					$query = $this->db->query("SELECT COUNT(*) AS total FROM `" . DB_PREFIX . "order` WHERE order_status_id = '" . (int)$this->config->get('config_complete_status_id') . "' AND (DATE(date_added) = '" . $this->db->escape($date) . "') GROUP BY DAY(date_added)");
 
 					if ($query->num_rows) {
 						$data['order']['data'][] = array($i, (int)$query->row['total']);
@@ -294,7 +294,7 @@ class ControllerCommonHome extends Controller {
 				break;
 			case 'year':
 				for ($i = 1; $i <= 12; $i++) {
-					$query = $this->db->query("SELECT COUNT(*) AS total FROM `" . DB_PREFIX . "order` WHERE order_status_id > '" . (int)$this->config->get('config_complete_status_id') . "' AND YEAR(date_added) = '" . date('Y') . "' AND MONTH(date_added) = '" . $i . "' GROUP BY MONTH(date_added)");
+					$query = $this->db->query("SELECT COUNT(*) AS total FROM `" . DB_PREFIX . "order` WHERE order_status_id = '" . (int)$this->config->get('config_complete_status_id') . "' AND YEAR(date_added) = '" . date('Y') . "' AND MONTH(date_added) = '" . $i . "' GROUP BY MONTH(date_added)");
 
 					if ($query->num_rows) {
 						$data['order']['data'][] = array($i, (int)$query->row['total']);
@@ -319,6 +319,12 @@ class ControllerCommonHome extends Controller {
 	}
 
 	public function login() {
+		if ($this->config->get('config_secure') && !$this->request->isSecure() && strpos(HTTPS_SERVER, 'https') === 0) {
+			$this->user->logout();
+
+			return $this->redirect($this->url->link('common/login', '', 'SSL'));
+		}
+
 		$route = '';
 
 		if (isset($this->request->get['route'])) {

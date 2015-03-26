@@ -59,7 +59,7 @@ class ControllerPaymentPPStandard extends Controller {
 
 			$this->data['discount_amount_cart'] = 0;
 
-			$total = $this->currency->format($order_info['total'], $order_info['currency_code'], false, false) - $subtotal;
+			$total = $this->currency->format($this->currency->convert($order_info['total'], $this->config->get('config_currency'), $order_info['currency_code']) - $subtotal, $order_info['currency_code'], 1.0, false);
 
 			if ($total > 0) {
 				$this->data['products'][] = array(
@@ -85,7 +85,7 @@ class ControllerPaymentPPStandard extends Controller {
 			$this->data['email'] = $order_info['email'];
 			$this->data['invoice'] = $this->session->data['order_id'] . ' - ' . html_entity_decode($order_info['payment_firstname'], ENT_QUOTES, 'UTF-8') . ' ' . html_entity_decode($order_info['payment_lastname'], ENT_QUOTES, 'UTF-8');
 			$this->data['lc'] = $this->session->data['language'];
-			$this->data['return'] = $this->url->link('checkout/success');
+			$this->data['return'] = $this->url->link('checkout/success', '', 'SSL');
 			$this->data['notify_url'] = $this->url->link('payment/pp_standard/callback', '', 'SSL');
 			$this->data['cancel_return'] = $this->url->link('checkout/checkout', '', 'SSL');
 

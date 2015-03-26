@@ -7,6 +7,10 @@ class ControllerAccountForgotten extends Controller {
 			$this->redirect($this->url->link('account/account', '', 'SSL'));
 		}
 
+		if ($this->config->get('config_secure') && !$this->request->isSecure()) {
+			$this->redirect($this->url->link('account/forgotten', '', 'SSL'), 301);
+		}
+
 		$this->language->load('account/forgotten');
 
 		$this->document->setTitle($this->language->get('heading_title'));
@@ -16,7 +20,7 @@ class ControllerAccountForgotten extends Controller {
 		if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validate()) {
 			$this->language->load('mail/forgotten');
 
-			$password = substr(sha1(uniqid(mt_rand(), true)), 0, 10);
+			$password = substr(hash_rand('sha1'), 0, 10);
 
 			$this->model_account_customer->editPassword($this->request->post['email'], $password);
 

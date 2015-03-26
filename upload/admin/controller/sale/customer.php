@@ -1010,10 +1010,22 @@ class ControllerSaleCustomer extends Controller {
 					}
 
 					// VAT Validation
-					$this->load->helper('vat');
+					$this->load->model('sale/customer_group');
 
-					if ($this->config->get('config_vat') && $value['tax_id'] && (vat_validation($country_info['iso_code_2'], $value['tax_id']) == 'invalid')) {
-						$this->error['address_tax_id'][$key] = $this->language->get('error_vat');
+					if (isset($this->request->post['customer_group_id']) && is_array($this->config->get('config_customer_group_display')) && in_array($this->request->post['customer_group_id'], $this->config->get('config_customer_group_display'))) {
+						$customer_group_id = $this->request->post['customer_group_id'];
+					} else {
+						$customer_group_id = $this->config->get('config_customer_group_id');
+					}
+
+					$customer_group = $this->model_sale_customer_group->getCustomerGroup($customer_group_id);
+
+					if ($customer_group && $customer_group['tax_id_display']) {
+						$this->load->helper('vat');
+
+						if ($this->config->get('config_vat') && $value['tax_id'] != '' && (vat_validation($country_info['iso_code_2'], $value['tax_id']) == 'invalid')) {
+							$this->error['address_tax_id'][$key] = $this->language->get('error_vat');
+						}
 					}
 				}
 
@@ -1064,7 +1076,7 @@ class ControllerSaleCustomer extends Controller {
 		$customer_info = $this->model_sale_customer->getCustomer($customer_id);
 
 		if ($customer_info) {
-			$token = md5(mt_rand());
+			$token = hash_rand('md5');
 
 			$this->model_sale_customer->editToken($customer_id, $token);
 
@@ -1079,9 +1091,9 @@ class ControllerSaleCustomer extends Controller {
 			$store_info = $this->model_setting_store->getStore($store_id);
 
 			if ($store_info) {
-				$this->redirect($store_info['url'] . 'index.php?route=account/login&token=' . $token);
+				$this->redirect(($this->config->get('config_secure') ? $store_info['ssl'] : $store_info['url']) . 'index.php?route=account/login&token=' . $token);
 			} else {
-				$this->redirect(HTTP_CATALOG . 'index.php?route=account/login&token=' . $token);
+				$this->redirect(($this->config->get('config_secure') ? HTTPS_CATALOG : HTTP_CATALOG) . 'index.php?route=account/login&token=' . $token);
 			}
 		} else {
 			$this->language->load('error/not_found');

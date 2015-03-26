@@ -3,6 +3,10 @@ class ControllerAccountVoucher extends Controller {
 	private $error = array();
 
 	public function index() {
+		if ($this->config->get('config_secure') && !$this->request->isSecure()) {
+			$this->redirect($this->url->link('account/voucher', '', 'SSL'), 301);
+		}
+
 		$this->language->load('account/voucher');
 
 		$this->document->setTitle($this->language->get('heading_title'));
@@ -152,7 +156,7 @@ class ControllerAccountVoucher extends Controller {
 		if (isset($this->request->post['amount'])) {
 			$this->data['amount'] = $this->request->post['amount'];
 		} else {
-			$this->data['amount'] = $this->currency->format(25, $this->config->get('config_currency'), false, false);
+			$this->data['amount'] = $this->currency->format($this->config->get('config_voucher_min'), '', '', false);
 		}
 
 		if (isset($this->request->post['agree'])) {

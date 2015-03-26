@@ -7,6 +7,10 @@ class ControllerAffiliateForgotten extends Controller {
 			$this->redirect($this->url->link('affiliate/account', '', 'SSL'));
 		}
 
+		if ($this->config->get('config_secure') && !$this->request->isSecure()) {
+			$this->redirect($this->url->link('affiliate/forgotten', '', 'SSL'), 301);
+		}
+
 		$this->language->load('affiliate/forgotten');
 
 		$this->document->setTitle($this->language->get('heading_title'));
@@ -16,7 +20,7 @@ class ControllerAffiliateForgotten extends Controller {
 		if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validate()) {
 			$this->language->load('mail/forgotten');
 
-			$password = substr(md5(mt_rand()), 0, 10);
+			$password = substr(hash_rand('md5'), 0, 10);
 
 			$this->model_affiliate_affiliate->editPassword($this->request->post['email'], $password);
 

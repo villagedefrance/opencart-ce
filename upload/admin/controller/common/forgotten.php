@@ -3,10 +3,6 @@ class ControllerCommonForgotten extends Controller {
 	private $error = array();
 
 	public function index() {
-		if ($this->user->isLogged()) {
-			$this->redirect($this->url->link('common/home', '', 'SSL'));
-		}
-
 		if (!$this->config->get('config_password')) {
 			$this->redirect($this->url->link('common/login', '', 'SSL'));
 		}
@@ -20,14 +16,14 @@ class ControllerCommonForgotten extends Controller {
 		if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validate()) {
 			$this->language->load('mail/forgotten');
 
-			$code = sha1(uniqid(mt_rand(), true));
+			$code = hash_rand('sha1');
 
 			$this->model_user_user->editCode($this->request->post['email'], $code);
 
 			$subject = sprintf($this->language->get('text_subject'), $this->config->get('config_name'));
 
 			$message  = sprintf($this->language->get('text_greeting'), $this->config->get('config_name')) . "\n\n";
-			$message .= sprintf($this->language->get('text_change'), $this->config->get('config_name')) . "\n\n";
+			$message .= $this->language->get('text_change') . "\n\n";
 			$message .= $this->url->link('common/reset', 'code=' . $code, 'SSL') . "\n\n";
 			$message .= sprintf($this->language->get('text_ip'), $this->request->server['REMOTE_ADDR']) . "\n\n";
 
@@ -55,7 +51,7 @@ class ControllerCommonForgotten extends Controller {
 
 		$this->data['breadcrumbs'][] = array(
 			'text'      => $this->language->get('text_home'),
-			'href'      => $this->url->link('common/home'),
+			'href'      => $this->url->link('common/home', '', 'SSL'),
 			'separator' => false
 		);
 

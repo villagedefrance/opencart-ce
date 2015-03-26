@@ -6,7 +6,7 @@ class ModelTotalCoupon extends Model {
 
 			$this->load->model('checkout/coupon');
 
-			$coupon_info = $this->model_checkout_coupon->getCoupon($this->session->data['coupon']);
+			$coupon_info = $this->model_checkout_coupon->getCoupon($this->session->data['coupon'], isset($this->session->data['manual']) ? false : true);
 
 			if ($coupon_info) {
 				$discount_total = 0;
@@ -75,6 +75,11 @@ class ModelTotalCoupon extends Model {
 					$discount_total += $this->session->data['shipping_method']['cost'];
 				}
 
+				// If discount greater than total
+				if ($discount_total > $total) {
+					$discount_total = $total; 
+				}
+
 				$total_data[] = array(
 					'code'       => 'coupon',
 					'title'      => sprintf($this->language->get('text_coupon'), $this->session->data['coupon']),
@@ -100,7 +105,7 @@ class ModelTotalCoupon extends Model {
 
 		$this->load->model('checkout/coupon');
 
-		$coupon_info = $this->model_checkout_coupon->getCoupon($code);
+		$coupon_info = $this->model_checkout_coupon->getCoupon($code, false, false);
 
 		if ($coupon_info) {
 			$this->model_checkout_coupon->redeem($coupon_info['coupon_id'], $order_info['order_id'], $order_info['customer_id'], $order_total['value']);

@@ -1,4 +1,25 @@
 <?php
+/*
+ * Parts of the contents of this file are based on work by other authors and
+ * have been used and modified under the terms of the GNU General Public
+ * License version 3 or later.
+ *
+ * Based on core.php from the PHP UTF-8 library by Harry Fuecks.
+ * http://sourceforge.net/projects/phputf8/
+ * Which has contributions from:
+ * <chernyshevsky at hotmail dot com>
+ * Chris Smith
+ * Andreas Gohr
+ *
+ * The functions utf8_to_unicode and utf8_from_unicode are based a PHP port by
+ * Henri Sivonen. http://iki.fi/hsivonen/php-utf8/
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation. Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ * http://lxr.mozilla.org/seamonkey/source/intl/uconv/src/nsUTF8ToUnicode.cpp
+ * http://lxr.mozilla.org/seamonkey/source/intl/uconv/src/nsUnicodeToUTF8.cpp
+ */
+
 function utf8_strlen($string) {
 	return strlen(utf8_decode($string));
 }

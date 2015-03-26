@@ -68,7 +68,6 @@ class ControllerSettingSetting extends Controller {
 		$this->data['entry_admin_limit'] = $this->language->get('entry_admin_limit');
 		$this->data['entry_product_count'] = $this->language->get('entry_product_count');
 		$this->data['entry_review'] = $this->language->get('entry_review');
-		$this->data['entry_download'] = $this->language->get('entry_download');
 		$this->data['entry_voucher_min'] = $this->language->get('entry_voucher_min');
 		$this->data['entry_voucher_max'] = $this->language->get('entry_voucher_max');
 		$this->data['entry_tax'] = $this->language->get('entry_tax');
@@ -127,8 +126,6 @@ class ControllerSettingSetting extends Controller {
 		$this->data['entry_fraud_score'] = $this->language->get('entry_fraud_score');
 		$this->data['entry_fraud_status'] = $this->language->get('entry_fraud_status');
 		$this->data['entry_secure'] = $this->language->get('entry_secure');
-		$this->data['entry_shared'] = $this->language->get('entry_shared');
-		$this->data['entry_robots'] = $this->language->get('entry_robots');
 		$this->data['entry_file_extension_allowed'] = $this->language->get('entry_file_extension_allowed');
 		$this->data['entry_file_mime_allowed'] = $this->language->get('entry_file_mime_allowed');
 		$this->data['entry_maintenance'] = $this->language->get('entry_maintenance');
@@ -506,12 +503,6 @@ class ControllerSettingSetting extends Controller {
 			$this->data['config_review_status'] = $this->request->post['config_review_status'];
 		} else {
 			$this->data['config_review_status'] = $this->config->get('config_review_status');
-		}
-
-		if (isset($this->request->post['config_download'])) {
-			$this->data['config_download'] = $this->request->post['config_download'];
-		} else {
-			$this->data['config_download'] = $this->config->get('config_download');
 		}
 
 		if (isset($this->request->post['config_voucher_min'])) {
@@ -966,18 +957,6 @@ class ControllerSettingSetting extends Controller {
 			$this->data['config_secure'] = $this->request->post['config_secure'];
 		} else {
 			$this->data['config_secure'] = $this->config->get('config_secure');
-		}
-
-		if (isset($this->request->post['config_shared'])) {
-			$this->data['config_shared'] = $this->request->post['config_shared'];
-		} else {
-			$this->data['config_shared'] = $this->config->get('config_shared');
-		}
-
-		if (isset($this->request->post['config_robots'])) {
-			$this->data['config_robots'] = $this->request->post['config_robots'];
-		} else {
-			$this->data['config_robots'] = $this->config->get('config_robots');
 		}
 
 		if (isset($this->request->post['config_seo_url'])) {

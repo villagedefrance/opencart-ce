@@ -9,6 +9,14 @@ class ControllerAccountReturn extends Controller {
 			$this->redirect($this->url->link('account/login', '', 'SSL'));
 		}
 
+		if (!$this->customer->isSecure()) {
+			$this->customer->logout();
+
+			$this->session->data['redirect'] = $this->url->link('account/return', '', 'SSL');
+
+			$this->redirect($this->url->link('account/login', '', 'SSL'));
+		}
+
 		$this->language->load('account/return');
 
 		$this->document->setTitle($this->language->get('heading_title'));
@@ -79,9 +87,9 @@ class ControllerAccountReturn extends Controller {
 		$pagination = new Pagination();
 		$pagination->total = $return_total;
 		$pagination->page = $page;
-		$pagination->limit = $this->config->get('config_catalog_limit');
+		$pagination->limit = 10;
 		$pagination->text = $this->language->get('text_pagination');
-		$pagination->url = $this->url->link('account/history', 'page={page}', 'SSL');
+		$pagination->url = $this->url->link('account/return', 'page={page}', 'SSL');
 
 		$this->data['pagination'] = $pagination->render();
 
@@ -115,6 +123,14 @@ class ControllerAccountReturn extends Controller {
 		}
 
 		if (!$this->customer->isLogged()) {
+			$this->session->data['redirect'] = $this->url->link('account/return/info', 'return_id=' . $return_id, 'SSL');
+
+			$this->redirect($this->url->link('account/login', '', 'SSL'));
+		}
+
+		if (!$this->customer->isSecure()) {
+			$this->customer->logout();
+
 			$this->session->data['redirect'] = $this->url->link('account/return/info', 'return_id=' . $return_id, 'SSL');
 
 			$this->redirect($this->url->link('account/login', '', 'SSL'));
@@ -295,6 +311,10 @@ class ControllerAccountReturn extends Controller {
 	}
 
 	public function insert() {
+		if ($this->config->get('config_secure') && !$this->request->isSecure()) {
+			$this->redirect($this->url->link('account/return/insert', '', 'SSL'), 301);
+		}
+
 		$this->language->load('account/return');
 
 		$this->load->model('account/return');
@@ -568,6 +588,10 @@ class ControllerAccountReturn extends Controller {
 	}
 
 	public function success() {
+		if ($this->config->get('config_secure') && !$this->request->isSecure()) {
+			$this->redirect($this->url->link('account/return/success', '', 'SSL'));
+		}
+
 		$this->language->load('account/return');
 
 		$this->document->setTitle($this->language->get('heading_title'));

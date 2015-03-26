@@ -31,7 +31,11 @@ class Cart {
 					$options = array();
 				}
 
-				$product_query = $this->db->query("SELECT * FROM " . DB_PREFIX . "product p LEFT JOIN " . DB_PREFIX . "product_description pd ON (p.product_id = pd.product_id) WHERE p.product_id = '" . (int)$product_id . "' AND pd.language_id = '" . (int)$this->config->get('config_language_id') . "' AND p.date_available <= NOW() AND p.status = '1'");
+				if (isset($this->session->data['manual'])) {
+					$product_query = $this->db->query("SELECT * FROM " . DB_PREFIX . "product p LEFT JOIN " . DB_PREFIX . "product_description pd ON (p.product_id = pd.product_id) WHERE p.product_id = '" . (int)$product_id . "' AND pd.language_id = '" . (int)$this->config->get('config_language_id') . "' AND p.date_available <= NOW()");
+				} else {
+					$product_query = $this->db->query("SELECT * FROM " . DB_PREFIX . "product p LEFT JOIN " . DB_PREFIX . "product_description pd ON (p.product_id = pd.product_id) WHERE p.product_id = '" . (int)$product_id . "' AND pd.language_id = '" . (int)$this->config->get('config_language_id') . "' AND p.date_available <= NOW() AND p.status = '1'");
+				}
 
 				if ($product_query->num_rows) {
 					$option_price = 0;
@@ -222,7 +226,7 @@ class Cart {
 					}
 
 					// Stock
-					if (!$product_query->row['quantity'] || ($product_query->row['quantity'] < $quantity)) {
+					if (!$product_query->row['quantity'] || ($product_query->row['quantity'] < $quantity) || ($product_query->row['quantity'] < $discount_quantity)) {
 						$stock = false;
 					}
 
@@ -261,7 +265,7 @@ class Cart {
 	}
 
 	public function add($product_id, $qty = 1, $option = array()) {
-		if (!$option) {
+		if (!$option || !is_array($option)) {
 			$key = (int)$product_id;
 		} else {
 			$key = (int)$product_id . ':' . base64_encode(serialize($option));
@@ -279,7 +283,7 @@ class Cart {
 	}
 
 	public function update($key, $qty) {
-		if ((int)$qty && ((int)$qty > 0)) {
+		if ((int)$qty && ((int)$qty > 0) && isset($this->session->data['cart'][$key])) {
 			$this->session->data['cart'][$key] = (int)$qty;
 		} else {
 			$this->remove($key);

@@ -22,6 +22,20 @@ class ControllerCheckoutManual extends Controller {
 			unset($this->session->data['reward']);
 			unset($this->session->data['voucher']);
 			unset($this->session->data['vouchers']);
+			unset($this->session->data['current_voucher']);
+			unset($this->session->data['current_voucher_value']);
+			unset($this->session->data['current_reward']);
+			unset($this->session->data['current_credit']);
+
+			// Manual order flag
+			$this->session->data['manual'] = true;
+
+			// Currency
+			if (!empty($this->request->post['currency_code']) && !empty($this->request->post['currency_value'])) {
+				$this->currency->override($this->request->post['currency_code'], $this->request->post['currency_value']);
+			} else {
+				$this->currency->set($this->config->get('config_currency'));
+			}
 
 			// Settings
 			$this->load->model('setting/setting');
@@ -54,25 +68,21 @@ class ControllerCheckoutManual extends Controller {
 
 			if (isset($this->request->post['order_product'])) {
 				foreach ($this->request->post['order_product'] as $order_product) {
-					$product_info = $this->model_catalog_product->getProduct($order_product['product_id']);
+					$option_data = array();
 
-					if ($product_info) {
-						$option_data = array();
-
-						if (isset($order_product['order_option'])) {
-							foreach ($order_product['order_option'] as $option) {
-								if ($option['type'] == 'select' || $option['type'] == 'radio' || $option['type'] == 'image') {
-									$option_data[$option['product_option_id']] = $option['product_option_value_id'];
-								} elseif ($option['type'] == 'checkbox') {
-									$option_data[$option['product_option_id']][] = $option['product_option_value_id'];
-								} elseif ($option['type'] == 'text' || $option['type'] == 'textarea' || $option['type'] == 'file' || $option['type'] == 'date' || $option['type'] == 'datetime' || $option['type'] == 'time') {
-									$option_data[$option['product_option_id']] = $option['value'];
-								}
+					if (isset($order_product['order_option'])) {
+						foreach ($order_product['order_option'] as $option) {
+							if ($option['type'] == 'select' || $option['type'] == 'radio' || $option['type'] == 'image') {
+								$option_data[$option['product_option_id']] = $option['product_option_value_id'];
+							} elseif ($option['type'] == 'checkbox') {
+								$option_data[$option['product_option_id']][] = $option['product_option_value_id'];
+							} elseif ($option['type'] == 'text' || $option['type'] == 'textarea' || $option['type'] == 'file' || $option['type'] == 'date' || $option['type'] == 'datetime' || $option['type'] == 'time') {
+								$option_data[$option['product_option_id']] = $option['value'];
 							}
 						}
-
-						$this->cart->add($order_product['product_id'], $order_product['quantity'], $option_data);
 					}
+
+					$this->cart->add($order_product['product_id'], $order_product['quantity'], $option_data);
 				}
 			}
 
@@ -215,8 +225,8 @@ class ControllerCheckoutManual extends Controller {
 					$json['error']['vouchers']['to_email'] = $this->language->get('error_email');
 				}
 
-				if (($this->request->post['amount'] < 1) || ($this->request->post['amount'] > 1000)) {
-					$json['error']['vouchers']['amount'] = sprintf($this->language->get('error_amount'), $this->currency->format(1, false, 1), $this->currency->format(1000, false, 1) . ' ' . $this->config->get('config_currency'));
+				if (($this->request->post['amount'] < $this->config->get('config_voucher_min')) || ($this->request->post['amount'] > $this->config->get('config_voucher_max'))) {
+					$json['error']['vouchers']['amount'] = sprintf($this->language->get('error_amount'), $this->currency->format($this->config->get('config_voucher_min'), false, 1), $this->currency->format($this->config->get('config_voucher_max'), false, 1) . ' ' . $this->config->get('config_currency'));
 				}
 
 				if (!isset($json['error']['vouchers'])) {
@@ -279,8 +289,6 @@ class ControllerCheckoutManual extends Controller {
 			$json['shipping_method'] = array();
 
 			if ($this->cart->hasShipping()) {
-				$this->load->model('localisation/country');
-
 				$country_info = $this->model_localisation_country->getCountry($this->request->post['shipping_country_id']);
 
 				if ($country_info && $country_info['postcode_required'] && (utf8_strlen($this->request->post['shipping_postcode']) < 2) || (utf8_strlen($this->request->post['shipping_postcode']) > 10)) {
@@ -293,14 +301,6 @@ class ControllerCheckoutManual extends Controller {
 
 				if (!isset($this->request->post['shipping_zone_id']) || $this->request->post['shipping_zone_id'] == '') {
 					$json['error']['shipping']['zone'] = $this->language->get('error_zone');
-				}
-
-				$this->load->model('localisation/country');
-
-				$country_info = $this->model_localisation_country->getCountry($this->request->post['shipping_country_id']);
-
-				if ($country_info && $country_info['postcode_required'] && (utf8_strlen($this->request->post['shipping_postcode']) < 2) || (utf8_strlen($this->request->post['shipping_postcode']) > 10)) {
-					$json['error']['shipping']['postcode'] = $this->language->get('error_postcode');
 				}
 
 				if (!isset($json['error']['shipping'])) {
@@ -389,7 +389,7 @@ class ControllerCheckoutManual extends Controller {
 			if (!empty($this->request->post['coupon'])) {
 				$this->load->model('checkout/coupon');
 
-				$coupon_info = $this->model_checkout_coupon->getCoupon($this->request->post['coupon']);
+				$coupon_info = $this->model_checkout_coupon->getCoupon($this->request->post['coupon'], false);
 
 				if ($coupon_info) {
 					$this->session->data['coupon'] = $this->request->post['coupon'];
@@ -404,7 +404,10 @@ class ControllerCheckoutManual extends Controller {
 
 				$voucher_info = $this->model_checkout_voucher->getVoucher($this->request->post['voucher']);
 
-				if ($voucher_info) {
+				if ($this->request->post['voucher'] == $this->request->post['current_voucher']) {
+					$this->session->data['current_voucher_value'] = $this->request->post['current_voucher_value'];
+					$this->session->data['voucher'] = $this->request->post['voucher'];
+				} elseif ($voucher_info) {
 					$this->session->data['voucher'] = $this->request->post['voucher'];
 				} else {
 					$json['error']['voucher'] = $this->language->get('error_voucher');
@@ -412,8 +415,14 @@ class ControllerCheckoutManual extends Controller {
 			}
 
 			// Reward Points
+			if (!empty($this->request->post['current_reward'])) {
+				$this->session->data['current_reward'] = $this->request->post['current_reward'];
+			}
 			if (!empty($this->request->post['reward'])) {
 				$points = $this->customer->getRewardPoints();
+				if (!empty($this->request->post['current_reward'])) {
+					$points += $this->request->post['current_reward'];
+				}
 
 				if ($this->request->post['reward'] > $points) {
 					$json['error']['reward'] = sprintf($this->language->get('error_points'), $this->request->post['reward']);
@@ -438,6 +447,14 @@ class ControllerCheckoutManual extends Controller {
 				}
 			}
 
+			// Credit
+			if (!empty($this->request->post['current_credit'])) {
+				$this->session->data['current_credit'] = $this->request->post['current_credit'];
+			}
+
+			// Save payment code to session. Klarna fee total needs this.
+			$this->session->data['payment_method']['code'] = isset($this->request->post['payment_code']) ? $this->request->post['payment_code'] : '';
+
 			// Totals
 			$json['order_total'] = array();
 			$total = 0;
@@ -459,17 +476,23 @@ class ControllerCheckoutManual extends Controller {
 
 					$this->{'model_total_' . $result['code']}->getTotal($json['order_total'], $total, $taxes);
 				}
-
-				$sort_order = array();
-
-				foreach ($json['order_total'] as $key => $value) {
-					$sort_order[$key] = $value['sort_order'];
-				}
-
-				array_multisort($sort_order, SORT_ASC, $json['order_total']);
 			}
 
+			$sort_order = array();
+
+			foreach ($json['order_total'] as $key => $value) {
+				$sort_order[$key] = $value['sort_order'];
+			}
+
+			array_multisort($sort_order, SORT_ASC, $json['order_total']);
+
 			// Payment
+			$country_info = $this->model_localisation_country->getCountry($this->request->post['payment_country_id']);
+
+			if ($country_info && $country_info['postcode_required'] && (utf8_strlen($this->request->post['payment_postcode']) < 2) || (utf8_strlen($this->request->post['payment_postcode']) > 10)) {
+				$json['error']['payment']['postcode'] = $this->language->get('error_postcode');
+			}
+
 			if ($this->request->post['payment_country_id'] == '') {
 				$json['error']['payment']['country'] = $this->language->get('error_country');
 			}
@@ -574,6 +597,11 @@ class ControllerCheckoutManual extends Controller {
 			unset($this->session->data['reward']);
 			unset($this->session->data['voucher']);
 			unset($this->session->data['vouchers']);
+			unset($this->session->data['current_voucher']);
+			unset($this->session->data['current_voucher_value']);
+			unset($this->session->data['current_reward']);
+			unset($this->session->data['current_credit']);
+			unset($this->session->data['manual']);
 		} else {
 			$json['error']['warning'] = $this->language->get('error_permission');
 		}

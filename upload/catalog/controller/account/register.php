@@ -7,6 +7,10 @@ class ControllerAccountRegister extends Controller {
 			$this->redirect($this->url->link('account/account', '', 'SSL'));
 		}
 
+		if ($this->config->get('config_secure') && !$this->request->isSecure()) {
+			$this->redirect($this->url->link('account/register', '', 'SSL'), 301);
+		}
+
 		$this->language->load('account/register');
 
 		$this->document->setTitle($this->language->get('heading_title'));
@@ -282,7 +286,7 @@ class ControllerAccountRegister extends Controller {
 		}
 
 		if (isset($this->request->post['zone_id'])) {
-			$this->data['zone_id'] = $this->request->post['zone_id'];
+			$this->data['zone_id'] = (int)$this->request->post['zone_id'];
 		} elseif (isset($this->session->data['shipping_zone_id'])) {
 			$this->data['zone_id'] = $this->session->data['shipping_zone_id'];
 		} else {
@@ -403,7 +407,7 @@ class ControllerAccountRegister extends Controller {
 
 		$this->load->model('localisation/country');
 
-		if (!isset($this->request->post['country_id']) || $this->request->post['country_id'] == '') {
+		if (!isset($this->request->post['country_id']) || $this->request->post['country_id'] == '' || !is_numeric($this->request->post['country_id'])) {
 			$this->error['country'] = $this->language->get('error_country');
 		} else {
 			$country_info = $this->model_localisation_country->getCountry($this->request->post['country_id']);
@@ -414,15 +418,17 @@ class ControllerAccountRegister extends Controller {
 				}
 
 				// VAT Validation
-				$this->load->helper('vat');
+				if ($customer_group && $customer_group['tax_id_display']) {
+					$this->load->helper('vat');
 
-				if ($this->config->get('config_vat') && isset($this->request->post['tax_id']) && (vat_validation($country_info['iso_code_2'], $this->request->post['tax_id']) == 'invalid')) {
-					$this->error['tax_id'] = $this->language->get('error_vat');
+					if ($this->config->get('config_vat') && $this->request->post['tax_id'] != '' && (vat_validation($country_info['iso_code_2'], $this->request->post['tax_id']) == 'invalid')) {
+						$this->error['tax_id'] = $this->language->get('error_vat');
+					}
 				}
 			}
 		}
 
-		if (!isset($this->request->post['zone_id']) || $this->request->post['zone_id'] == '') {
+		if (!isset($this->request->post['zone_id']) || $this->request->post['zone_id'] == '' || !is_numeric($this->request->post['zone_id'])) {
 			$this->error['zone'] = $this->language->get('error_zone');
 		}
 

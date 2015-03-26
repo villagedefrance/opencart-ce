@@ -10,7 +10,10 @@ class ControllerCommonSeoUrl extends Controller {
 		if (isset($this->request->get['_route_'])) {
 			$parts = explode('/', $this->request->get['_route_']);
 
-			if (strlen(end($parts)) == 0) array_pop($parts); // remove any empty arrays from trailing /
+			 // remove any empty arrays from trailing /
+			if (utf8_strlen(end($parts)) == 0) {
+				array_pop($parts);
+			}
 
 			foreach ($parts as $part) {
 				$query = $this->db->query("SELECT * FROM " . DB_PREFIX . "url_alias WHERE keyword = '" . $this->db->escape($part) . "'");
@@ -56,7 +59,7 @@ class ControllerCommonSeoUrl extends Controller {
 				}
 			}
 
-			if (isset($this->request->get['route'])) {
+			if (isset($this->request->get['route']) && (!$this->config->get('config_maintenance') || isset($this->session->data['token']))) {
 				return $this->forward($this->request->get['route']);
 			}
 		}
@@ -81,8 +84,8 @@ class ControllerCommonSeoUrl extends Controller {
 
 						unset($data[$key]);
 					}
-				} elseif ($key == 'path') {
-					$categories = explode('_', $value);
+				} elseif ($key == 'path' && !is_array($value)) {
+					$categories = explode('_', (string)$value);
 
 					foreach ($categories as $category) {
 						$query = $this->db->query("SELECT * FROM " . DB_PREFIX . "url_alias WHERE `query` = 'category_id=" . (int)$category . "'");
@@ -104,11 +107,11 @@ class ControllerCommonSeoUrl extends Controller {
 
 			if ($data) {
 				foreach ($data as $key => $value) {
-					$query .= '&' . $key . '=' . $value;
+					$query .= '&' . rawurlencode($key) . '=' . rawurlencode($value);
 				}
 
 				if ($query) {
-					$query = '?' . trim($query, '&');
+					$query = '?' . str_replace('&', '&amp;', trim($query, '&'));
 				}
 			}
 

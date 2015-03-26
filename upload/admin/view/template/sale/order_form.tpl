@@ -523,15 +523,21 @@
               </tr>
               <tr>
                 <td class="left"><?php echo $entry_coupon; ?></td>
-                <td class="left"><input type="text" name="coupon" value="" /></td>
+                <td class="left"><input type="text" name="coupon" value="<?php echo $coupon; ?>" /></td>
               </tr>
               <tr>
                 <td class="left"><?php echo $entry_voucher; ?></td>
-                <td class="left"><input type="text" name="voucher" value="" /></td>
+                <td class="left"><input type="text" name="voucher" value="<?php echo $voucher; ?>" />
+                  <input type="hidden" name="current_voucher" value="<?php echo $current_voucher; ?>" />
+                  <input type="hidden" name="current_voucher_value" value="<?php echo $current_voucher_value; ?>" /></td>
               </tr>
               <tr>
                 <td class="left"><?php echo $entry_reward; ?></td>
-                <td class="left"><input type="text" name="reward" value="" /></td>
+                <td class="left"><input type="text" name="reward" value="<?php echo $reward; ?>" />
+                  <input type="hidden" name="current_reward" value="<?php echo $current_reward; ?>" />
+                  <input type="hidden" name="currency_code" value="<?php echo $currency_code; ?>" />
+                  <input type="hidden" name="currency_value" value="<?php echo $currency_value; ?>" />
+                  <input type="hidden" name="current_credit" value="<?php echo $current_credit; ?>" /></td>
               </tr>
               <tr>
                 <td class="left"><?php echo $entry_order_status; ?></td>
@@ -638,7 +644,7 @@ $('input[name=\'customer\']').catcomplete({
 	}
 });
 
-$('select[id=\'customer_group_id\']').live('change', function() {
+$('select[id=\'customer_group_id\']').bind('change', function() {
 	$('input[name=\'customer_group_id\']').attr('value', this.value);
 
 	var customer_group = [];
@@ -1521,7 +1527,7 @@ $('#button-product, #button-voucher, #button-update').live('click', function() {
 
 				$('#total').html(html);
 			} else {
-				html  = '</tr>';
+				html  = '<tr>';
 				html += '  <td colspan="5" class="center"><?php echo $text_no_results; ?></td>';
 				html += '</tr>';
 

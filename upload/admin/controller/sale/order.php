@@ -1154,6 +1154,75 @@ class ControllerSaleOrder extends Controller {
 			$this->data['order_totals'] = array();
 		}
 
+		// Currency
+		if (!empty($order_info)) {
+			$this->data['currency_code'] = $order_info['currency_code'];
+		} else {
+			$this->data['currency_code'] = '';
+		}
+
+		if (!empty($order_info)) {
+			$this->data['currency_value'] = $order_info['currency_value'];
+		} else {
+			$this->data['currency_value'] = '';
+		}
+
+		// Check current coupon, voucher, reward and credit
+		$current_coupon  = '';
+		$current_voucher = '';
+		$current_voucher_value = 0;
+		$current_reward  = '';
+		$current_credit  = '';
+		foreach ($this->data['order_totals'] as $key => $value) {
+			if ($value['code'] == 'coupon') {
+				$start = strpos($value['title'], '(') + 1;
+				$end = strrpos($value['title'], ')');
+
+				if ($start && $end) {
+					$current_coupon = substr($value['title'], $start, $end - $start);
+				}
+			} elseif ($value['code'] == 'voucher') {
+				$start = strpos($value['title'], '(') + 1;
+				$end = strrpos($value['title'], ')');
+
+				if ($start && $end) {
+					$current_voucher = substr($value['title'], $start, $end - $start);
+					$current_voucher_value = abs($value['value']);
+				}
+			} elseif ($value['code'] == 'reward') {
+				$start = strpos($value['title'], '(') + 1;
+				$end = strrpos($value['title'], ')');
+
+				if ($start && $end) {
+					$current_reward = substr($value['title'], $start, $end - $start);
+				}
+			} elseif ($value['code'] == 'credit') {
+				$current_credit = abs($value['value']);
+			}
+		}
+		$this->data['current_voucher'] = $current_voucher;
+		$this->data['current_voucher_value'] = $current_voucher_value;
+		$this->data['current_reward'] = $current_reward;
+		$this->data['current_credit'] = $current_credit;
+
+		if (isset($this->request->post['coupon'])) {
+			$this->data['coupon'] = $this->request->post['coupon'];
+		} else {
+			$this->data['coupon'] = $current_coupon;
+		}
+
+		if (isset($this->request->post['voucher'])) {
+			$this->data['voucher'] = $this->request->post['voucher'];
+		} else {
+			$this->data['voucher'] = $current_voucher;
+		}
+
+		if (isset($this->request->post['reward'])) {
+			$this->data['reward'] = $this->request->post['reward'];
+		} else {
+			$this->data['reward'] = $current_reward;
+		}
+
 		$this->template = 'sale/order_form.tpl';
 		$this->children = array(
 			'common/header',
@@ -1210,10 +1279,16 @@ class ControllerSaleOrder extends Controller {
 			}
 
 			// VAT Validation
-			$this->load->helper('vat');
+			$this->load->model('sale/customer_group');
 
-			if ($this->config->get('config_vat') && $this->request->post['payment_tax_id'] && (vat_validation($country_info['iso_code_2'], $this->request->post['payment_tax_id']) == 'invalid')) {
-				$this->error['payment_tax_id'] = $this->language->get('error_vat');
+			$customer_group = $this->model_sale_customer_group->getCustomerGroup($this->request->post['customer_group_id']);
+
+			if ($customer_group && $customer_group['tax_id_display']) {
+				$this->load->helper('vat');
+
+				if ($this->config->get('config_vat') && $this->request->post['payment_tax_id'] != '' && (vat_validation($country_info['iso_code_2'], $this->request->post['payment_tax_id']) == 'invalid')) {
+					$this->error['payment_tax_id'] = $this->language->get('error_vat');
+				}
 			}
 		}
 
@@ -1222,10 +1297,6 @@ class ControllerSaleOrder extends Controller {
 		}
 
 		if (!isset($this->request->post['payment_zone_id']) || $this->request->post['payment_zone_id'] == '') {
-			$this->error['payment_zone'] = $this->language->get('error_zone');
-		}
-
-		if ($this->request->post['payment_method'] == '') {
 			$this->error['payment_zone'] = $this->language->get('error_zone');
 		}
 
@@ -1568,7 +1639,7 @@ class ControllerSaleOrder extends Controller {
 			$this->data['payment_method'] = $order_info['payment_method'];
 			$this->data['total'] = $this->currency->format($order_info['total'], $order_info['currency_code'], $order_info['currency_value']);
 
-			if ($order_info['total'] < 0) {
+			if ($order_info['total'] > 0) {
 				$this->data['credit'] = $order_info['total'];
 			} else {
 				$this->data['credit'] = 0;
@@ -2325,7 +2396,7 @@ class ControllerSaleOrder extends Controller {
 
 			if (!isset($json['error'])) {
 				if (is_uploaded_file($this->request->files['file']['tmp_name']) && file_exists($this->request->files['file']['tmp_name'])) {
-					$file = basename($filename) . '.' . md5(mt_rand());
+					$file = basename($filename) . '.' . hash_rand('md5');
 
 					$json['file'] = $file;
 

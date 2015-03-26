@@ -248,20 +248,6 @@
                 <?php echo $text_no; ?>
                 <?php } ?></td>
             </tr>
-            <tr>
-              <td><?php echo $entry_download; ?></td>
-              <td><?php if ($config_download) { ?>
-                <input type="radio" name="config_download" value="1" checked="checked" />
-                <?php echo $text_yes; ?>
-                <input type="radio" name="config_download" value="0" />
-                <?php echo $text_no; ?>
-                <?php } else { ?>
-                <input type="radio" name="config_download" value="1" />
-                <?php echo $text_yes; ?>
-                <input type="radio" name="config_download" value="0" checked="checked" />
-                <?php echo $text_no; ?>
-                <?php } ?></td>
-            </tr>
           </table>
           <h2><?php echo $text_voucher; ?></h2>
           <table class="form">
@@ -879,24 +865,6 @@
                 <input type="radio" name="config_secure" value="0" checked="checked" />
                 <?php echo $text_no; ?>
                 <?php } ?></td>
-            </tr>
-            <tr>
-              <td><?php echo $entry_shared; ?></td>
-              <td><?php if ($config_shared) { ?>
-                <input type="radio" name="config_shared" value="1" checked="checked" />
-                <?php echo $text_yes; ?>
-                <input type="radio" name="config_shared" value="0" />
-                <?php echo $text_no; ?>
-                <?php } else { ?>
-                <input type="radio" name="config_shared" value="1" />
-                <?php echo $text_yes; ?>
-                <input type="radio" name="config_shared" value="0" checked="checked" />
-                <?php echo $text_no; ?>
-                <?php } ?></td>
-            </tr>
-            <tr>
-              <td><?php echo $entry_robots; ?></td>
-              <td><textarea name="config_robots" cols="40" rows="5"><?php echo $config_robots; ?></textarea></td>
             </tr>
             <tr>
               <td><?php echo $entry_seo_url; ?></td>

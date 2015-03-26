@@ -7,6 +7,10 @@ class ControllerAffiliateRegister extends Controller {
 			$this->redirect($this->url->link('affiliate/account', '', 'SSL'));
 		}
 
+		if ($this->config->get('config_secure') && !$this->request->isSecure()) {
+			$this->redirect($this->url->link('affiliate/register', '', 'SSL'), 301);
+		}
+
 		$this->language->load('affiliate/register');
 
 		$this->document->setTitle($this->language->get('heading_title'));
@@ -231,7 +235,7 @@ class ControllerAffiliateRegister extends Controller {
 		}
 
 		if (isset($this->request->post['zone_id'])) {
-			$this->data['zone_id'] = $this->request->post['zone_id'];
+			$this->data['zone_id'] = (int)$this->request->post['zone_id'];
 		} else {
 			$this->data['zone_id'] = '';
 		}
@@ -385,7 +389,7 @@ class ControllerAffiliateRegister extends Controller {
 			}
 		}
 
-		if (!isset($this->request->post['zone_id']) || $this->request->post['zone_id'] == '') {
+		if (!isset($this->request->post['zone_id']) || $this->request->post['zone_id'] == '' || !is_numeric($this->request->post['zone_id'])) {
 			$this->error['zone'] = $this->language->get('error_zone');
 		}
 

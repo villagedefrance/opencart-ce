@@ -44,7 +44,6 @@ $_['entry_catalog_limit']          = 'Default Items Per Page (Catalog):<br /><sp
 $_['entry_admin_limit']            = 'Default Items Per Page (Admin):<br /><span class="help">Determines how many admin items are shown per page (orders, customers, etc)</span>';
 $_['entry_product_count']          = 'Category Product Count:<br /><span class="help">Show the number of products inside the subcategories in the storefront header category menu. Be warned, this will cause an extreme performance hit for stores with a lot of subcategories!</span>';
 $_['entry_review']                 = 'Allow Reviews:<br /><span class="help">Enable/Disable new review entry and display of existing reviews</span>';
-$_['entry_download']               = 'Allow Downloads:';
 $_['entry_voucher_min']            = 'Voucher Min:<br /><span class="help">Minimum amount a customer can purchase a voucher for.</span>';
 $_['entry_voucher_max']            = 'Voucher Max:<br /><span class="help">Maximum amount a customer can purchase a voucher for.</span>';
 $_['entry_tax']                    = 'Display Prices With Tax:';
@@ -61,7 +60,7 @@ $_['entry_guest_checkout']         = 'Guest Checkout:<br /><span class="help">Al
 $_['entry_checkout']               = 'Checkout Terms:<br /><span class="help">Forces people to agree to terms before an a customer can checkout.</span>';
 $_['entry_order_edit']             = 'Order Editing:<br /><span class="help">Number of days allowed to edit an order. This is required because prices and discounts may change over time corrupting the order if it\'s edited.</span>';
 $_['entry_invoice_prefix']         = 'Invoice Prefix:<br /><span class="help">Set the invoice prefix (e.g. INV-2011-00). Invoice ID\'s will start at 1 for each unique prefix</span>';
-$_['entry_order_status']           = 'Order Status:<br /><span class="help">Set the default order status when an order is processed.</span>';
+$_['entry_order_status']           = 'Order Status:<br /><span class="help">Set the default order status when an order is processed but not validated (such as orders from a banned IP). Orders with this status should be checked manually.</span>';
 $_['entry_complete_status']        = 'Complete Order Status:<br /><span class="help">Set the order status the customers order must reach before they are allowed to access their downloadable products and gift vouchers.</span>';
 $_['entry_stock_display']          = 'Display Stock:<br /><span class="help">Display stock quantity on the product page.</span>';
 $_['entry_stock_warning']          = 'Show Out Of Stock Warning:<br /><span class="help">Display out of stock message on the shopping cart page if a product is out of stock but stock checkout is yes. (Warning always shows if stock checkout is no)</span>';
@@ -103,8 +102,6 @@ $_['entry_fraud_key']              = 'MaxMind License Key:</span>';
 $_['entry_fraud_score']            = 'MaxMind Risk Score:<br /><span class="help">The higher the score the more likely the order is fraudulent. Set a score between 0 - 100.</span>';
 $_['entry_fraud_status']           = 'MaxMind Fraud Order Status:<br /><span class="help">Orders over your set score will be assigned this order status and will not be allowed to reach the complete status automatically.</span>';
 $_['entry_secure']                 = 'Use SSL:<br /><span class="help">To use SSL check with your host if a SSL certificate is installed and added the SSL URL to the catalog and admin config files.</span>';
-$_['entry_shared']                 = 'Use Shared Sessions:<br /><span class="help">Try to share the session cookie between stores so the cart can be passed between different domains.</span>';
-$_['entry_robots']                 = 'Robots:<br /><span class="help">A list of web crawler user agents that shared sessions will not be used with. Use separate lines for each user agent.</span>';
 $_['entry_seo_url']                = 'Use SEO URLs:<br /><span class="help">To use SEO URLs apache module mod-rewrite must be installed and you need to rename the htaccess.txt to .htaccess.</span>';
 $_['entry_file_extension_allowed'] = 'Allowed File Extensions:<br /><span class="help">Add which file extensions are allowed to be uploaded. Use a new line for each value.</span>';
 $_['entry_file_mime_allowed']      = 'Allowed File Mime Types:<br /><span class="help">Add which file mime types are allowed to be uploaded. Use a new line for each value.</span>';

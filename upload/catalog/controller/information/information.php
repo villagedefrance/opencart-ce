@@ -86,6 +86,8 @@ class ControllerInformationInformation extends Controller {
 				'common/header'
 			);
 
+			$this->response->addHeader($this->request->server['SERVER_PROTOCOL'] . ' 404 Not Found');
+
 			$this->response->setOutput($this->render());
 		}
 	}

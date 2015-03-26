@@ -255,6 +255,12 @@ class ModelCheckoutOrder extends Model {
 				$order_status = '';
 			}
 
+			if ($this->config->get('config_secure')) {
+				$store_url = str_replace('http://', 'https://', $order_info['store_url']);
+			} else {
+				$store_url = $order_info['store_url'];
+			}
+
 			$subject = sprintf($language->get('text_new_subject'), $order_info['store_name'], $order_id);
 
 			// HTML Mail
@@ -281,6 +287,7 @@ class ModelCheckoutOrder extends Model {
 			$template->data['text_quantity'] = $language->get('text_new_quantity');
 			$template->data['text_price'] = $language->get('text_new_price');
 			$template->data['text_total'] = $language->get('text_new_total');
+			$template->data['text_comment'] = $language->get('text_new_comment');
 			$template->data['text_footer'] = $language->get('text_new_footer');
 			$template->data['text_powered'] = $language->get('text_new_powered');
 
@@ -288,10 +295,10 @@ class ModelCheckoutOrder extends Model {
 			$template->data['store_name'] = $order_info['store_name'];
 			$template->data['store_url'] = $order_info['store_url'];
 			$template->data['customer_id'] = $order_info['customer_id'];
-			$template->data['link'] = $order_info['store_url'] . 'index.php?route=account/order/info&order_id=' . $order_id;
+			$template->data['link'] = $store_url . 'index.php?route=account/order/info&order_id=' . $order_id;
 
 			if ($order_download_query->num_rows) {
-				$template->data['download'] = $order_info['store_url'] . 'index.php?route=account/download';
+				$template->data['download'] = $store_url . 'index.php?route=account/download';
 			} else {
 				$template->data['download'] = '';
 			}
@@ -305,9 +312,9 @@ class ModelCheckoutOrder extends Model {
 			$template->data['ip'] = $order_info['ip'];
 
 			if ($comment && $notify) {
-				$template->data['comment'] = nl2br($comment);
+				$template->data['instruction'] = nl2br($comment);
 			} else {
-				$template->data['comment'] = '';
+				$template->data['instruction'] = '';
 			}
 
 			if ($order_info['payment_address_format']) {
@@ -421,6 +428,12 @@ class ModelCheckoutOrder extends Model {
 
 			$template->data['totals'] = $order_total_query->rows;
 
+			if ($order_info['comment']) {
+				$template->data['comment'] = nl2br($order_info['comment']);
+			} else {
+				$template->data['comment'] = '';
+			}
+
 			if (file_exists(DIR_TEMPLATE . $this->config->get('config_template') . '/template/mail/order.tpl')) {
 				$html = $template->fetch($this->config->get('config_template') . '/template/mail/order.tpl');
 			} else {
@@ -467,12 +480,12 @@ class ModelCheckoutOrder extends Model {
 
 			if ($order_info['customer_id']) {
 				$text .= $language->get('text_new_link') . "\n";
-				$text .= $order_info['store_url'] . 'index.php?route=account/order/info&order_id=' . $order_id . "\n\n";
+				$text .= $store_url . 'index.php?route=account/order/info&order_id=' . $order_id . "\n\n";
 			}
 
 			if ($order_download_query->num_rows) {
 				$text .= $language->get('text_new_download') . "\n";
-				$text .= $order_info['store_url'] . 'index.php?route=account/download' . "\n\n";
+				$text .= $store_url . 'index.php?route=account/download' . "\n\n";
 			}
 
 			// Comment
@@ -642,7 +655,7 @@ class ModelCheckoutOrder extends Model {
 
 				if ($order_info['customer_id']) {
 					$message .= $language->get('text_update_link') . "\n";
-					$message .= $order_info['store_url'] . 'index.php?route=account/order/info&order_id=' . $order_id . "\n\n";
+					$message .= ($this->config->get('config_secure') ? str_replace('http://', 'https://', $order_info['store_url']) : $order_info['store_url']) . 'index.php?route=account/order/info&order_id=' . $order_id . "\n\n";
 				}
 
 				if ($comment) {

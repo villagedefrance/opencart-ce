@@ -1,6 +1,6 @@
 <?php
 // Version
-define('VERSION', '1.5.5.1');
+define('VERSION', '1.5.5.1-ce.rc2');
 
 // Configuration
 if (file_exists('config.php')) {
@@ -98,6 +98,7 @@ $registry->set('request', $request);
 // Response
 $response = new Response();
 $response->addHeader('Content-Type: text/html; charset=utf-8');
+$response->addHeader('X-Frame-Options: SAMEORIGIN');
 $registry->set('response', $response);
 
 // Cache

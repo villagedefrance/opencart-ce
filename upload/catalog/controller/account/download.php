@@ -7,6 +7,14 @@ class ControllerAccountDownload extends Controller {
 			$this->redirect($this->url->link('account/login', '', 'SSL'));
 		}
 
+		if (!$this->customer->isSecure() || $this->customer->loginExpired()) {
+			$this->customer->logout();
+
+			$this->session->data['redirect'] = $this->url->link('account/download', '', 'SSL');
+
+			$this->redirect($this->url->link('account/login', '', 'SSL'));
+		}
+
 		$this->language->load('account/download');
 
 		$this->document->setTitle($this->language->get('heading_title'));
@@ -65,14 +73,14 @@ class ControllerAccountDownload extends Controller {
 
 					$suffix = array(
 						'B',
-						'KB',
-						'MB',
-						'GB',
-						'TB',
-						'PB',
-						'EB',
-						'ZB',
-						'YB'
+						'KiB',
+						'MiB',
+						'GiB',
+						'TiB',
+						'PiB',
+						'EiB',
+						'ZiB',
+						'YiB'
 					);
 
 					while (($size / 1024) > 1) {
@@ -153,6 +161,14 @@ class ControllerAccountDownload extends Controller {
 			$this->redirect($this->url->link('account/login', '', 'SSL'));
 		}
 
+		if (!$this->customer->isSecure() || $this->customer->loginExpired()) {
+			$this->customer->logout();
+
+			$this->session->data['redirect'] = $this->url->link('account/download', '', 'SSL');
+
+			$this->redirect($this->url->link('account/login', '', 'SSL'));
+		}
+
 		$this->load->model('account/download');
 
 		if (isset($this->request->get['order_download_id'])) {
@@ -176,7 +192,9 @@ class ControllerAccountDownload extends Controller {
 					header('Pragma: public');
 					header('Content-Length: ' . filesize($file));
 
-					if (ob_get_level()) ob_end_clean();
+					if (ob_get_level()) {
+						ob_end_clean();
+					}
 
 					readfile($file, 'rb');
 

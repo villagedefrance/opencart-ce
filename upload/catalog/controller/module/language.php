@@ -4,7 +4,8 @@ class ControllerModuleLanguage extends Controller {
 		if (isset($this->request->post['language_code'])) {
 			$this->session->data['language'] = $this->request->post['language_code'];
 
-			if (isset($this->request->post['redirect'])) {
+			// Added strpos check to pass McAfee PCI compliance test (http://forum.opencart.com/viewtopic.php?f=10&t=12043&p=151494#p151295)
+			if (isset($this->request->post['redirect']) && (strpos($this->request->post['redirect'], $this->config->get('config_url')) === 0 || strpos($this->request->post['redirect'], $this->config->get('config_ssl')) === 0)) {
 				$this->redirect($this->request->post['redirect']);
 			} else {
 				$this->redirect($this->url->link('common/home'));
@@ -51,6 +52,10 @@ class ControllerModuleLanguage extends Controller {
 			$route = $data['route'];
 
 			unset($data['route']);
+
+			// Remove customer and affiliate anti-CSRF tokens
+			unset($data['customer_token']);
+			unset($data['affiliate_token']);
 
 			$url = '';
 
