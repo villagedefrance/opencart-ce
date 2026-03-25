@@ -755,7 +755,7 @@ class ControllerSaleOrder extends Controller {
 		$this->data['token'] = $this->session->data['token'];
 
 		if (isset($this->request->get['order_id'])) {
-			$this->data['order_id'] = $this->request->get['order_id'];
+			$this->data['order_id'] = (int)$this->request->get['order_id'];
 		} else {
 			$this->data['order_id'] = 0;
 		}
@@ -1602,7 +1602,7 @@ class ControllerSaleOrder extends Controller {
 			$this->data['invoice'] = $this->url->link('sale/order/invoice', 'token=' . $this->session->data['token'] . '&order_id=' . (int)$this->request->get['order_id'], 'SSL');
 			$this->data['cancel'] = $this->url->link('sale/order', 'token=' . $this->session->data['token'] . $url, 'SSL');
 
-			$this->data['order_id'] = $this->request->get['order_id'];
+			$this->data['order_id'] = (int)$this->request->get['order_id'];
 
 			if ($order_info['invoice_no']) {
 				$this->data['invoice_no'] = $order_info['invoice_prefix'] . $order_info['invoice_no'];
@@ -2293,7 +2293,7 @@ class ControllerSaleOrder extends Controller {
 		$option_info = $this->model_sale_order->getOrderOption($this->request->get['order_id'], $order_option_id);
 
 		if ($option_info && $option_info['type'] == 'file') {
-			$file = DIR_DOWNLOAD . $option_info['value'];
+			$file = DIR_DOWNLOAD . basename($option_info['value']);
 			$mask = basename(utf8_substr($option_info['value'], 0, utf8_strrpos($option_info['value'], '.')));
 
 			if (!headers_sent()) {
@@ -2310,7 +2310,7 @@ class ControllerSaleOrder extends Controller {
 					readfile($file, 'rb');
 					exit;
 				} else {
-					exit('Error: Could not find file ' . $file . '!');
+					exit('Error: Could not find file ' . $mask . '!');
 				}
 			} else {
 				exit('Error: Headers already sent out!');

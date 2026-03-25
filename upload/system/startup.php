@@ -3,26 +3,13 @@
 error_reporting(E_ALL);
 
 // Check Version
-if (version_compare(phpversion(), '5.1.0', '<') == true) {
-	exit('PHP5.1+ Required');
+if (version_compare(phpversion(), '5.2.3', '<') == true) {
+	exit('PHP 5.2.3 or later required');
 }
 
 // Register Globals
 if (ini_get('register_globals')) {
-	ini_set('session.use_only_cookies', 'On');
-	ini_set('session.use_trans_sid', 'Off');
-	ini_set('session.cookie_httponly', 'On');
-
-	session_set_cookie_params(0, '/');
-	session_start();
-
-	$globals = array($_REQUEST, $_SESSION, $_SERVER, $_FILES);
-
-	foreach ($globals as $global) {
-		foreach(array_keys($global) as $key) {
-			unset(${$key});
-		}
-	}
+	exit('PHP directive register_globals must be set to Off');
 }
 
 // Magic Quotes Fix
@@ -63,7 +50,7 @@ if (!isset($_SERVER['DOCUMENT_ROOT'])) {
 }
 
 if (!isset($_SERVER['REQUEST_URI'])) {
-	$_SERVER['REQUEST_URI'] = substr($_SERVER['PHP_SELF'], 1);
+	$_SERVER['REQUEST_URI'] = $_SERVER['PHP_SELF'];
 
 	if (isset($_SERVER['QUERY_STRING'])) {
 		$_SERVER['REQUEST_URI'] .= '?' . $_SERVER['QUERY_STRING'];
@@ -80,7 +67,6 @@ if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROT
 
 // Helper
 require_once(DIR_SYSTEM . 'helper/crypto.php');
-require_once(DIR_SYSTEM . 'helper/json.php');
 require_once(DIR_SYSTEM . 'helper/utf8.php');
 
 // Engine

@@ -80,6 +80,11 @@ $registry->set('log', $log);
 function error_handler($errno, $errstr, $errfile, $errline) {
 	global $log, $config;
 
+	// error suppressed with @
+	if (!(error_reporting() & $errno)) {
+		return false;
+	}
+
 	switch ($errno) {
 		case E_NOTICE:
 		case E_USER_NOTICE:
@@ -173,7 +178,7 @@ if (!isset($session->data['language']) || $session->data['language'] != $code) {
 }
 
 if (!isset($request->cookie['language']) || $request->cookie['language'] != $code) {
-	setcookie('language', $code, time() + 60 * 60 * 24 * 30, '/', $request->server['HTTP_HOST']);
+	setcookie('language', $code, time() + 60 * 60 * 24 * 30, '/');
 }
 
 $config->set('config_language_id', $languages[$code]['language_id']);

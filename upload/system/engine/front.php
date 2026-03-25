@@ -31,14 +31,14 @@ final class Front {
 	}
 
 	private function execute($action) {
-		if (file_exists($action->getFile())) {
+		if ($action->getFile() && is_file($action->getFile())) {
 			require_once($action->getFile());
 
 			$class = $action->getClass();
 
 			$controller = new $class($this->registry);
 
-			if (is_callable(array($controller, $action->getMethod()))) {
+			if (is_callable(array($controller, $action->getMethod())) && substr($action->getMethod(), 0, 2) != '__') {
 				$action = call_user_func_array(array($controller, $action->getMethod()), $action->getArgs());
 			} else {
 				$action = $this->error;

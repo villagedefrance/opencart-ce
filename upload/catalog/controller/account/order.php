@@ -96,7 +96,7 @@ class ControllerAccountOrder extends Controller {
 		$this->data['button_continue'] = $this->language->get('button_continue');
 
 		if (isset($this->request->get['page'])) {
-			$page = $this->request->get['page'];
+			$page = (int)$this->request->get['page'];
 		} else {
 			$page = 1;
 		}
@@ -246,7 +246,7 @@ class ControllerAccountOrder extends Controller {
 				$this->data['invoice_no'] = '';
 			}
 
-			$this->data['order_id'] = $this->request->get['order_id'];
+			$this->data['order_id'] = (int)$this->request->get['order_id'];
 			$this->data['date_added'] = date($this->language->get('date_format_short'), strtotime($order_info['date_added']));
 
 			if ($order_info['payment_address_format']) {

@@ -25,8 +25,8 @@
         <tr>
           <td>PHP Version:</td>
           <td><?php echo phpversion(); ?></td>
-          <td>5.0+</td>
-          <td align="center"><?php echo (phpversion() >= '5.0') ? '<img src="view/image/good.png" alt="Good" />' : '<img src="view/image/bad.png" alt="Bad" />'; ?></td>
+          <td>5.5+</td>
+          <td align="center"><?php echo (version_compare(phpversion(), '5.5', '>=')) ? '<img src="view/image/good.png" alt="Good" />' : '<img src="view/image/bad.png" alt="Bad" />'; ?></td>
         </tr>
         <tr>
           <td>Register Globals:</td>
@@ -82,16 +82,29 @@
           <td align="center"><?php echo extension_loaded('curl') ? '<img src="view/image/good.png" alt="Good" />' : '<img src="view/image/bad.png" alt="Bad" />'; ?></td>
         </tr>
         <tr>
+          <?php if (version_compare(PHP_VERSION, '7.1', '>=')) { ?>
+          <td>OpenSSL:</td>
+          <td><?php echo function_exists('openssl_encrypt') ? 'On' : 'Off'; ?></td>
+          <td>On</td>
+          <td align="center"><?php echo function_exists('openssl_encrypt') ? '<img src="view/image/good.png" alt="Good" />' : '<img src="view/image/bad.png" alt="Bad" />'; ?></td>
+          <?php } else { ?>
           <td>mCrypt:</td>
           <td><?php echo function_exists('mcrypt_encrypt') ? 'On' : 'Off'; ?></td>
           <td>On</td>
           <td align="center"><?php echo function_exists('mcrypt_encrypt') ? '<img src="view/image/good.png" alt="Good" />' : '<img src="view/image/bad.png" alt="Bad" />'; ?></td>
+          <?php } ?>
         </tr>
         <tr>
           <td>ZIP:</td>
           <td><?php echo extension_loaded('zlib') ? 'On' : 'Off'; ?></td>
           <td>On</td>
           <td align="center"><?php echo extension_loaded('zlib') ? '<img src="view/image/good.png" alt="Good" />' : '<img src="view/image/bad.png" alt="Bad" />'; ?></td>
+        </tr>
+        <tr>
+          <td>JSON:</td>
+          <td><?php echo extension_loaded('json') ? 'On' : 'Off'; ?></td>
+          <td>On</td>
+          <td align="center"><?php echo extension_loaded('json') ? '<img src="view/image/good.png" alt="Good" />' : '<img src="view/image/bad.png" alt="Bad" />'; ?></td>
         </tr>
       </table>
     </fieldset>

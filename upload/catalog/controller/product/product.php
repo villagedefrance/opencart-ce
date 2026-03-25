@@ -549,6 +549,8 @@ class ControllerProductProduct extends Controller {
 
 			$this->data['continue'] = $this->url->link('common/home');
 
+			$this->response->addHeader($this->request->server['SERVER_PROTOCOL'] . ' 404 Not Found');
+
 			if (file_exists(DIR_TEMPLATE . $this->config->get('config_template') . '/template/error/not_found.tpl')) {
 				$this->template = $this->config->get('config_template') . '/template/error/not_found.tpl';
 			} else {
@@ -564,8 +566,6 @@ class ControllerProductProduct extends Controller {
 				'common/header'
 			);
 
-			$this->response->addHeader($this->request->server['SERVER_PROTOCOL'] . ' 404 Not Found');
-
 			$this->response->setOutput($this->render());
 		}
 	}
@@ -579,7 +579,7 @@ class ControllerProductProduct extends Controller {
 		$this->data['text_no_reviews'] = $this->language->get('text_no_reviews');
 
 		if (isset($this->request->get['page'])) {
-			$page = $this->request->get['page'];
+			$page = (int)$this->request->get['page'];
 		} else {
 			$page = 1;
 		}
@@ -711,7 +711,9 @@ class ControllerProductProduct extends Controller {
 			$file = basename($filename) . '.' . hash_rand('md5');
 
 			// Hide the uploaded file name so people can not link to it directly.
-			$json['file'] = $this->encryption->encrypt($file);
+			$json['file'] = hash_rand('md5');
+
+			$this->session->data['upload_file'][$json['file']] = $this->encryption->encrypt($file);
 
 			move_uploaded_file($this->request->files['file']['tmp_name'], DIR_DOWNLOAD . $file);
 

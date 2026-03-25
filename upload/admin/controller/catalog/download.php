@@ -345,7 +345,7 @@ class ControllerCatalogDownload extends Controller {
 		$this->data['token'] = $this->session->data['token'];
 
 		if (isset($this->request->get['download_id'])) {
-			$this->data['download_id'] = $this->request->get['download_id'];
+			$this->data['download_id'] = (int)$this->request->get['download_id'];
 		} else {
 			$this->data['download_id'] = 0;
 		}
@@ -412,7 +412,7 @@ class ControllerCatalogDownload extends Controller {
 			$this->error['filename'] = $this->language->get('error_filename');
 		}
 
-		if (!file_exists(DIR_DOWNLOAD . $this->request->post['filename']) && !is_file(DIR_DOWNLOAD . $this->request->post['filename'])) {
+		if (!is_file(DIR_DOWNLOAD . basename($this->request->post['filename']))) {
 			$this->error['filename'] = $this->language->get('error_exists');
 		}
 

@@ -24,9 +24,9 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 // DIR
-define('DIR_APPLICATION', str_replace('\'', '/', realpath(dirname(__FILE__))) . '/');
-define('DIR_SYSTEM', str_replace('\'', '/', realpath(dirname(__FILE__) . '/../')) . '/system/');
-define('DIR_OPENCART', str_replace('\'', '/', realpath(DIR_APPLICATION . '../')) . '/');
+define('DIR_APPLICATION', str_replace('\\', '/', realpath(dirname(__FILE__))) . '/');
+define('DIR_SYSTEM', str_replace('\\', '/', realpath(dirname(__FILE__) . '/../')) . '/system/');
+define('DIR_OPENCART', str_replace('\\', '/', realpath(DIR_APPLICATION . '../')) . '/');
 define('DIR_DATABASE', DIR_SYSTEM . 'database/');
 define('DIR_LANGUAGE', DIR_APPLICATION . 'language/');
 define('DIR_TEMPLATE', DIR_APPLICATION . 'view/template/');
@@ -45,7 +45,7 @@ $registry->set('load', $loader);
 
 function handleError($errno, $errstr, $errfile, $errline, array $errcontext) {
     // error was suppressed with the @-operator
-    if (0 === error_reporting()) {
+    if (!(error_reporting() & $errno)) {
         return false;
     }
     throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
@@ -135,8 +135,8 @@ function install($options) {
 
 function check_requirements() {
     $error = null;
-    if (phpversion() < '5.0') {
-        $error = 'Warning: You need to use PHP5 or above for OpenCart to work!';
+    if (!version_compare(phpversion(), '5.5', '>=')) {
+        $error = 'Warning: You need to use PHP 5.5 or above for OpenCart to work!';
     }
 
     if (!ini_get('file_uploads')) {
@@ -215,12 +215,9 @@ function write_config_files($options) {
     $output  = '<?php' . "\n";
     $output .= '// HTTP' . "\n";
     $output .= 'define(\'HTTP_SERVER\', \'' . $options['http_server'] . '\');' . "\n";
-    $output .= 'define(\'HTTP_IMAGE\', \'' . $options['http_server'] . 'image/\');' . "\n";
-    $output .= 'define(\'HTTP_ADMIN\', \'' . $options['http_server'] . 'admin/\');' . "\n\n";
 
     $output .= '// HTTPS' . "\n";
     $output .= 'define(\'HTTPS_SERVER\', \'' . $options['http_server'] . '\');' . "\n";
-    $output .= 'define(\'HTTPS_IMAGE\', \'' . $options['http_server'] . 'image/\');' . "\n\n";
 
     $output .= '// DIR' . "\n";
     $output .= 'define(\'DIR_APPLICATION\', \'' . DIR_OPENCART . 'catalog/\');' . "\n";
@@ -253,12 +250,10 @@ function write_config_files($options) {
     $output .= '// HTTP' . "\n";
     $output .= 'define(\'HTTP_SERVER\', \'' . $options['http_server'] . 'admin/\');' . "\n";
     $output .= 'define(\'HTTP_CATALOG\', \'' . $options['http_server'] . '\');' . "\n";
-    $output .= 'define(\'HTTP_IMAGE\', \'' . $options['http_server'] . 'image/\');' . "\n\n";
 
     $output .= '// HTTPS' . "\n";
     $output .= 'define(\'HTTPS_SERVER\', \'' . $options['http_server'] . 'admin/\');' . "\n";
     $output .= 'define(\'HTTPS_CATALOG\', \'' . $options['http_server'] . '\');' . "\n";
-    $output .= 'define(\'HTTPS_IMAGE\', \'' . $options['http_server'] . 'image/\');' . "\n\n";
 
     $output .= '// DIR' . "\n";
     $output .= 'define(\'DIR_APPLICATION\', \'' . DIR_OPENCART . 'admin/\');' . "\n";

@@ -92,6 +92,10 @@ class ControllerCommonSeoUrl extends Controller {
 
 						if ($query->num_rows) {
 							$url .= '/' . $query->row['keyword'];
+						} else {
+							$url = '';
+
+							break;
 						}
 					}
 
@@ -106,9 +110,7 @@ class ControllerCommonSeoUrl extends Controller {
 			$query = '';
 
 			if ($data) {
-				foreach ($data as $key => $value) {
-					$query .= '&' . rawurlencode($key) . '=' . rawurlencode($value);
-				}
+				$query = http_build_query($data);
 
 				if ($query) {
 					$query = '?' . str_replace('&', '&amp;', trim($query, '&'));
